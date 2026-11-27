@@ -1,0 +1,4 @@
+EmpID,Name,Grade,Discipline,Subsidiary,Unit,Department,DateOfBirth,DateOfJoining,GradeSince,PostingSince,GradeHistory,Expertise,PreferredSubsidiaries,Exemption
+90011000,Sanjay Pradhan,E4,Personnel,MCL,Talcher,Land & Revenue,1988-03-14,2014-07-21,2022-04-01,2019-06-10,E2:3;E3:4.7;E4:4.6,L&R:5;R&R:2;Industrial Relations:3,CCL,
+90017865,Farah Mohanty,E4,Mining,NCL,Nigahi,Planning & Projects,1987-05-02,2014-05-02,2021-05-02,2019-05-02,E2:3;E3:4;E4:5.5,Mine Planning:9;Safety & Rescue:2,,
+90034341,Sarita Chatterjee,E5,E&M,NCL,Khadia,E&M (Electrical),1977-10-31,2012-10-31,2022-11-01,2014-09-25,E2:3;E3:3;E4:4;E5:4.0,Power Distribution:8;Coal Handling Plant:2,MCL,Medical ground

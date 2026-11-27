@@ -1,0 +1,4 @@
+ReqID,Subsidiary,Unit,Department,Grade,Discipline,RequiredExpertise,MinYears,Positions,Priority,Remarks
+RQ-001,CCL,Barkakana,Land & Revenue,E4,Personnel,L&R,3,1,High,Land and R&R cases pending for project expansion
+RQ-006,SECL,Gevra,Planning & Projects,E4,Mining,Mine Planning,6,1,Low,Succession planning
+RQ-010,ECL,Satgram,Civil,E8,Civil,Civil Construction,5,2,High,Expansion project under way

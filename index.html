@@ -1,32 +1,644 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team tool - coming soon</title>
-  <style>
-    body { font-family: Arial, sans-serif; color: #1f2937;
-           max-width: 640px; margin: 40px auto; padding: 0 16px; }
-    .box { border: 2px dashed #c2410c; border-radius: 12px; padding: 20px; }
-    .ok { color: #047857; font-weight: bold; }
-    .warn { color: #b45309; font-weight: bold; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CIL Transfer Matching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a working desk. Header + KPI strip, then tabbed work areas; tables scroll inside their own frames. */
+:root{
+  --bg:#F2F4F1; --surface:#FFFFFF; --sunk:#E9ECE8; --ink:#1A2220; --muted:#5A6661; --line:#D7DDD8;
+  --accent:#1D5884; --accent-ink:#FFFFFF; --accent-soft:#E1ECF5;
+  --ember:#A9581A;
+  --good:#2C7A4B; --good-soft:#E0F0E5; --warn:#9A630A; --warn-soft:#FAEFD7; --bad:#AE3A31; --bad-soft:#F7E2DF;
+  --bar:#E4E8E4;
+  --f-display:"Archivo","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121715; --surface:#1A201E; --sunk:#151A18; --ink:#E5EAE7; --muted:#97A39E; --line:#2C3431;
+  --accent:#7EB5DF; --accent-ink:#0C1720; --accent-soft:#1C2C38; --ember:#E19B5A;
+  --good:#6BC28D; --good-soft:#18301F; --warn:#E2B157; --warn-soft:#352A13; --bad:#EE8379; --bad-soft:#3A1E1B; --bar:#28302D;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121715; --surface:#1A201E; --sunk:#151A18; --ink:#E5EAE7; --muted:#97A39E; --line:#2C3431;
+  --accent:#7EB5DF; --accent-ink:#0C1720; --accent-soft:#1C2C38; --ember:#E19B5A;
+  --good:#6BC28D; --good-soft:#18301F; --warn:#E2B157; --warn-soft:#352A13; --bad:#EE8379; --bad-soft:#3A1E1B; --bar:#28302D;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1280px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:1.6rem;font-weight:800}
+h2{font-size:1.15rem;font-weight:700}
+h3{font-size:.95rem;font-weight:600}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-block:24px 16px;border-bottom:1px solid var(--line)}
+header.top p{margin:4px 0 0;color:var(--muted);max-width:68ch}
+.cycle{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--sunk);border:1px solid var(--line);font-size:.78rem;color:var(--muted)}
+.tag b{color:var(--ink);font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block}
+
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-block:16px}
+.kpi{background:var(--surface);padding:12px 14px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi .s{font-size:.78rem;color:var(--muted)}
+.kpi.alert .v{color:var(--bad)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:480px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+nav.tabs button{background:none;border:0;padding:10px 14px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+nav.tabs button:hover{color:var(--ink)}
+section.panel{padding-top:16px;display:flex;flex-direction:column;gap:16px}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar .grow{flex:1 1 180px;min-width:0}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+input[type=search],input[type=text],input[type=date],input[type=number],select{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 9px;min-width:0;max-width:100%}
+input[type=search]{width:100%}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.small{padding:3px 9px;font-size:.82rem}
+
+.frame{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--sunk);position:sticky;top:0;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:color-mix(in srgb,var(--accent-soft) 35%,transparent)}
+table.sugg{min-width:1080px}
+table.sugg td.req{width:250px}
+table.sugg td.who{width:290px}
+table.sugg td.fit{width:120px}
+table.sugg td.dec{width:200px}
+.req .t{font-weight:600}
+.sub{display:inline-block;font-family:var(--f-mono);font-size:.78rem;font-weight:500;padding:0 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.arrow{color:var(--muted);margin:0 4px}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:1px 8px;border-radius:999px;letter-spacing:.02em}
+.p-High{background:var(--bad-soft);color:var(--bad)}
+.p-Medium{background:var(--warn-soft);color:var(--warn)}
+.p-Low{background:var(--sunk);color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:.76rem;padding:1px 8px;border-radius:5px;background:var(--sunk);border:1px solid var(--line);white-space:nowrap}
+.chip.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.chip.man{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.score{display:flex;flex-direction:column;gap:4px}
+.score .n{font-family:var(--f-display);font-weight:700;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.score .n small{font-family:var(--f-body);font-weight:500;font-size:.72rem;color:var(--muted);margin-left:4px}
+.bar{height:6px;border-radius:3px;background:var(--bar);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px}
+.t-strong{background:var(--good)} .t-good{background:var(--accent)} .t-fair{background:var(--warn)}
+.who select{width:100%;margin-top:6px}
+.empty-seat{color:var(--bad);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:5px 10px;cursor:pointer;font-size:.82rem;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"][data-v="Approve"]{background:var(--good);color:var(--surface)}
+.seg button[aria-pressed="true"][data-v="Hold"]{background:var(--warn);color:var(--surface)}
+.seg button[aria-pressed="true"][data-v="Reject"]{background:var(--bad);color:var(--surface)}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card p{margin:0}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;font-size:.88rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.note{border-left:3px solid var(--ember);background:var(--surface);padding:10px 14px;border-radius:0 8px 8px 0;font-size:.88rem;color:var(--muted)}
+.note b{color:var(--ink)}
+.banner{padding:10px 14px;border-radius:8px;font-size:.88rem}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.banner.good{background:var(--good-soft);color:var(--good)}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px 20px}
+.rule{display:flex;flex-direction:column;gap:4px}
+.rule .hint{font-size:.78rem;color:var(--muted)}
+.check{display:flex;gap:8px;align-items:flex-start}
+.check input{margin-top:4px}
+.w{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) 52px;gap:10px;align-items:center}
+.w input[type=range]{width:100%;accent-color:var(--accent)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{background:var(--sunk);border-radius:8px;padding:12px}
+.step .k{font-family:var(--f-mono);color:var(--ember);font-size:.8rem;font-weight:500}
+
+.flow td,.flow th{text-align:center;padding:8px;min-width:52px}
+.flow th:first-child,.flow td:first-child{text-align:left}
+.heat{font-family:var(--f-mono);font-variant-numeric:tabular-nums;border-radius:4px;padding:2px 0}
+
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 45%,transparent);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:50}
+.modal{background:var(--surface);border-radius:12px;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid var(--line)}
+.modal textarea{width:100%;flex:1;min-height:260px;font:12px/1.45 var(--f-mono);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.88rem;z-index:60}
+.err{color:var(--bad);font-size:.85rem}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.rank td{padding:8px 12px}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s ease}}
+</style>
 </head>
 <body>
-  <div class="box">
-    <h1>Our team's tool is coming soon</h1>
-    <p>This placeholder page will be replaced in Phase 1 of the workshop.</p>
-    <p id="config-check">Checking database settings...</p>
-  </div>
-  <script src="config.js"></script>
-  <script>
-    var el = document.getElementById("config-check");
-    var url = window.SUPABASE_URL || "";
-    var key = window.SUPABASE_PUBLISHABLE_KEY || "";
-    var ready = url.indexOf("PASTE") === -1 && key.indexOf("sb_publishable_") === 0;
-    el.textContent = ready ? "Database settings: filled in \u2713"
-                           : "Database settings: not filled in yet (this is normal before Phase 1)";
-    el.className = ready ? "ok" : "warn";
-  </script>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="label">Coal India Limited · Annual transfer cycle</div>
+      <h1>CIL Transfer Matching</h1>
+      <p>Matches executives to grade vacancies across subsidiaries by field of expertise, years in that field, grade seasoning and tenure, so each posting puts proven experience where it is needed.</p>
+    </div>
+    <div class="cycle">
+      <span class="tag">Cycle date <b id="cycleTag" class="num"></b></span>
+      <span class="tag" id="srcTag"></span>
+      <span class="tag"><span class="dot"></span>Data stays in this browser</span>
+    </div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="suggestions">Posting suggestions</button>
+    <button role="tab" data-tab="employee">Employee view</button>
+    <button role="tab" data-tab="flow">Transfer flow</button>
+    <button role="tab" data-tab="rules">Rules &amp; weights</button>
+    <button role="tab" data-tab="data">Data</button>
+  </nav>
+
+  <main id="main"></main>
+</div>
+<div id="layer"></div>
+
+<script>
+"use strict";
+/* ---------------- Reference data ---------------- */
+const SUBS = {
+  "ECL":{name:"Eastern Coalfields Ltd",units:["Sonepur Bazari","Rajmahal","Kunustoria","Satgram","Mugma"]},
+  "BCCL":{name:"Bharat Coking Coal Ltd",units:["Barora","Kusunda","Lodna","Block II","Govindpur"]},
+  "CCL":{name:"Central Coalfields Ltd",units:["Barkakana","Piparwar","Magadh-Amrapali","NK Area","Rajhara"]},
+  "NCL":{name:"Northern Coalfields Ltd",units:["Jayant","Nigahi","Dudhichua","Amlohri","Khadia"]},
+  "WCL":{name:"Western Coalfields Ltd",units:["Nagpur","Wani","Chandrapur","Ballarpur","Pench"]},
+  "SECL":{name:"South Eastern Coalfields Ltd",units:["Gevra","Dipka","Kusmunda","Korba","Chirimiri"]},
+  "MCL":{name:"Mahanadi Coalfields Ltd",units:["Talcher","Ib Valley","Lakhanpur","Jagannath","Basundhara"]},
+  "CMPDI":{name:"Central Mine Planning & Design Institute",units:["HQ Ranchi","RI-1 Asansol","RI-4 Nagpur","RI-7 Bhubaneswar"]},
+  "NEC":{name:"North Eastern Coalfields",units:["Margherita"]},
+  "CIL HQ":{name:"CIL Headquarters",units:["Kolkata"]}
+};
+const SUB_ORDER = Object.keys(SUBS);
+// [field, discipline, related-group, department]
+const FIELDS = [
+  ["L&R","Personnel","Land","Land & Revenue"],["R&R","Personnel","Land","Land & Revenue"],["Land Acquisition","Mining","Land","Land & Revenue"],
+  ["Opencast Operations","Mining","MineOps","Mining (Opencast)"],["Underground Operations","Mining","MineOps","Mining (UG)"],["Mine Planning","Mining","MineOps","Planning & Projects"],
+  ["Safety & Rescue","Mining","MineOps","Safety"],["Explosives & Blasting","Mining","MineOps","Mining (Opencast)"],["Coal Dispatch","Mining","Market","Sales & Dispatch"],
+  ["HEMM Maintenance","E&M","Plant","E&M (HEMM)"],["Coal Handling Plant","E&M","Plant","E&M (CHP)"],["Power Distribution","E&M","Plant","E&M (Electrical)"],["Washery Operations","E&M","Plant","Washery"],
+  ["Industrial Relations","Personnel","People","Personnel (IR)"],["Recruitment & Training","Personnel","People","HRD"],["Establishment & Payroll","Personnel","People","Personnel (Establishment)"],["CSR","Personnel","People","CSR"],
+  ["Accounts & Audit","Finance","Money","Finance"],["Taxation","Finance","Money","Finance (Tax)"],["Budget & Costing","Finance","Money","Finance (Budget)"],["Treasury","Finance","Money","Finance"],
+  ["Procurement & Contracts","Materials Management","Supply","Materials Management"],["Stores & Inventory","Materials Management","Supply","Materials Management"],
+  ["Coal Sales","Marketing & Sales","Market","Sales & Marketing"],["Quality Control","Marketing & Sales","Market","Quality Control"],["Rail Logistics","Marketing & Sales","Market","Sales & Dispatch"],
+  ["Environment Clearance","Environment","Green","Environment"],["Forest Clearance","Environment","Green","Environment"],["Mine Closure & Reclamation","Environment","Green","Environment"],
+  ["Civil Construction","Civil","Build","Civil"],["Township & Estate","Civil","Build","Estate"],
+  ["SAP ERP","Systems","Digital","Systems"],["IT Infrastructure","Systems","Digital","Systems"],
+  ["Exploration Drilling","Geology","Geo","Geology"],["Geological Modelling","Geology","Geo","Geology"]
+];
+const FIELD_ALIASES = {"landrevenue":"L&R","landandrevenue":"L&R","lr":"L&R","lnr":"L&R","rr":"R&R","rehabilitationresettlement":"R&R","rehabilitationandresettlement":"R&R","la":"Land Acquisition","ir":"Industrial Relations","hemm":"HEMM Maintenance","chp":"Coal Handling Plant","sap":"SAP ERP","erp":"SAP ERP"};
+const key = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const FIELD_BY_KEY = {}; FIELDS.forEach(f=>FIELD_BY_KEY[key(f[0])]=f);
+function canonField(s){ s=String(s||"").trim(); const k=key(s); if(FIELD_BY_KEY[k]) return FIELD_BY_KEY[k][0]; if(FIELD_ALIASES[k]) return FIELD_ALIASES[k]; return s; }
+const groupOf = f => (FIELD_BY_KEY[key(f)]||[])[2] || null;
+
+const DEFAULT_RULES = {cycle:"2026-11-01",minTenure:3,retireAge:60,retireBuffer:2,threshold:45,related:50,sameDiscipline:true,interOnly:true,honorExempt:true,
+  w:{field:40,years:25,grade:10,service:5,tenure:10,pref:10}};
+const WEIGHT_LABELS = {field:["Expertise match","Same field scores full; a related field scores the related-field credit."],years:["Years in that field","Measured against the minimum the requirement asks for."],grade:["Seasoning in grade","Years in the current grade, full credit at 5."],service:["Total service","Full credit at 20 years."],tenure:["Tenure at current posting","Longer stays rotate first; full credit at 10 years."],pref:["Stated preference","Employee listed this subsidiary as a preference."]};
+const PRIO_MULT = {High:1.15,Medium:1,Low:0.9};
+
+/* ---------------- Sample data (fictional) ---------------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeSample(){
+  const rnd=mulberry32(20261101), pick=a=>a[Math.floor(rnd()*a.length)], rint=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+  const wpick=o=>{const e=Object.entries(o);let t=e.reduce((s,x)=>s+x[1],0),r=rnd()*t;for(const [k,v] of e){if((r-=v)<0)return k}return e[0][0]};
+  const cyc=Date.UTC(2026,10,1), minus=y=>new Date(cyc-y*365.25*864e5).toISOString().slice(0,10);
+  const FIRST=["Sanjay","Ananya","Rakesh","Priyanka","Subhash","Debashree","Amit","Kavita","Manoj","Sujata","Rajesh","Pooja","Bikash","Neha","Pradeep","Swati","Ashok","Ritu","Saurav","Madhusmita","Vikram","Anjali","Tapan","Shalini","Arvind","Ipsita","Gaurav","Nandini","Suresh","Lipika","Abhishek","Meera","Ranjit","Sneha","Dilip","Bhavna","Kiran","Arpita","Nitin","Sarita","Hemant","Rashmi","Partha","Jyoti","Alok","Smita","Venkat","Lakshmi","Imran","Farah"];
+  const LAST=["Pradhan","Mohanty","Singh","Sharma","Das","Mishra","Kumar","Banerjee","Sahu","Patel","Rao","Nayak","Verma","Ghosh","Tripathi","Panda","Yadav","Chatterjee","Jha","Reddy","Sinha","Behera","Gupta","Mahato","Khan","Iyer","Oraon","Munda","Dubey","Bose"];
+  const DISC_W={"Mining":30,"E&M":18,"Personnel":13,"Finance":10,"Materials Management":6,"Marketing & Sales":5,"Environment":5,"Civil":5,"Systems":4,"Geology":4};
+  const SUB_W={SECL:15,MCL:15,CCL:13,NCL:12,WCL:11,ECL:10,BCCL:10,CMPDI:6,NEC:3,"CIL HQ":5};
+  const EXEMPT=["Spouse posting (couple case)","Medical ground","Officers' association office-bearer"];
+  const emps=[];
+  for(let i=0;i<110;i++){
+    const disc=wpick(DISC_W); let sub=wpick(disc==="Geology"?{CMPDI:8,SECL:2,MCL:2,CCL:2}:SUB_W);
+    const grade="E"+wpick({2:7,3:15,4:20,5:18,6:16,7:13,8:7}); const g=+grade.slice(1);
+    const hist=[]; let prev=0; for(let k=2;k<g;k++){const y=rint(3,4);hist.push("E"+k+":"+y);prev+=y}
+    const cur=rint(1,5)+Math.round(rnd()*10)/10; hist.push(grade+":"+cur.toFixed(1)); const service=prev+cur;
+    const tenure=Math.min(service,rint(1,12)+Math.round(rnd()*10)/10);
+    let joinAge=rint(23,29)+(rnd()<0.14?rint(6,10):0); const age=Math.min(59.6,joinAge+service);
+    const fl=FIELDS.filter(f=>f[1]===disc); const p=pick(fl);
+    const ex=[[p[0],Math.max(1,Math.round(service*(0.35+rnd()*0.45)))]];
+    if(rnd()<0.7){const s2=pick(fl.filter(f=>f!==p).concat(FIELDS.filter(f=>f[2]===p[2]&&f!==p)));if(s2&&!ex.some(e=>e[0]===s2[0]))ex.push([s2[0],Math.max(1,Math.round(service*(0.12+rnd()*0.3)))])}
+    if(rnd()<0.25){const s3=pick(fl);if(!ex.some(e=>e[0]===s3[0]))ex.push([s3[0],Math.max(1,Math.round(service*0.15))])}
+    const prefs=[]; const np=rnd()<0.4?0:(rnd()<0.6?1:2); while(prefs.length<np){const s=wpick(SUB_W);if(s!==sub&&!prefs.includes(s))prefs.push(s)}
+    emps.push({EmpID:String(90011000+i*1373),Name:pick(FIRST)+" "+pick(LAST),Grade:grade,Discipline:disc,Subsidiary:sub,Unit:pick(SUBS[sub].units),Department:p[3],
+      DateOfBirth:minus(age),DateOfJoining:minus(service),GradeSince:minus(cur),PostingSince:minus(tenure),GradeHistory:hist.join(";"),
+      Expertise:ex.map(e=>e[0]+":"+e[1]).join(";"),PreferredSubsidiaries:prefs.join(";"),Exemption:rnd()<0.06?pick(EXEMPT):""});
+  }
+  // The worked example from the brief: an MCL executive with 5 years in L&R.
+  Object.assign(emps[0],{Name:"Sanjay Pradhan",Grade:"E4",Discipline:"Personnel",Subsidiary:"MCL",Unit:"Talcher",Department:"Land & Revenue",DateOfBirth:"1988-03-14",DateOfJoining:"2014-07-21",GradeSince:"2022-04-01",PostingSince:"2019-06-10",GradeHistory:"E2:3;E3:4.7;E4:4.6",Expertise:"L&R:5;R&R:2;Industrial Relations:3",PreferredSubsidiaries:"CCL",Exemption:""});
+  const vacs=[{ReqID:"RQ-001",Subsidiary:"CCL",Unit:"Barkakana",Department:"Land & Revenue",Grade:"E4",Discipline:"Personnel",RequiredExpertise:"L&R",MinYears:3,Positions:1,Priority:"High",Remarks:"Land and R&R cases pending for project expansion"}];
+  const REM={High:["Statutory post vacant","Expansion project under way","New mine commissioning","Production target at risk"],Medium:["Retirement backfill","Workload increase","Transfer-out backfill"],Low:["Strengthening the team","Succession planning"]};
+  let n=2;
+  while(vacs.length<34){
+    let disc,field,grade,sub,minY;
+    if(rnd()<0.8){const e=pick(emps);const ef=e.Expertise.split(";")[0].split(":");disc=e.Discipline;field=ef[0];grade=e.Grade;minY=Math.max(1,Math.min(+ef[1]-rint(0,2),rint(2,6)));do{sub=wpick(SUB_W)}while(sub===e.Subsidiary)}
+    else{disc=wpick(DISC_W);const f=pick(FIELDS.filter(x=>x[1]===disc));field=f[0];grade="E"+rint(3,8);minY=rint(3,7);sub=wpick(SUB_W)}
+    const pr=wpick({High:3,Medium:5,Low:2});
+    vacs.push({ReqID:"RQ-"+String(n++).padStart(3,"0"),Subsidiary:sub,Unit:pick(SUBS[sub].units),Department:FIELD_BY_KEY[key(field)][3],Grade:grade,Discipline:disc,RequiredExpertise:field,MinYears:minY,Positions:rnd()<0.22?2:1,Priority:pr,Remarks:pick(REM[pr])});
+  }
+  return {emps,vacs};
+}
+
+/* ---------------- CSV ---------------- */
+function parseCSV(text){
+  text=String(text).replace(/^﻿/,"");
+  const first=text.split(/\r?\n/)[0]||""; const d=(first.split("\t").length>first.split(",").length)?"\t":",";
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true; else if(c===d){row.push(f);f=""} else if(c==="\n"||c==="\r"){if(c==="\r"&&text[i+1]==="\n")i++;row.push(f);f="";if(row.some(x=>x.trim()!==""))rows.push(row);row=[]} else f+=c}
+  row.push(f); if(row.some(x=>x.trim()!==""))rows.push(row);
+  return rows;
+}
+const EMP_COLS={EmpID:["empid","employeeid","eisno","eis","empno","employeeno","id"],Name:["name","employeename"],Grade:["grade","currentgrade"],Discipline:["discipline","cadre"],Subsidiary:["subsidiary","company","currentsubsidiary"],Unit:["unit","area","currentunit"],Department:["department","dept","currentdepartment"],DateOfBirth:["dateofbirth","dob"],DateOfJoining:["dateofjoining","doj","joiningdate"],GradeSince:["gradesince","currentgradesince","dateofpromotion","dateofcurrentgrade"],PostingSince:["postingsince","currentpostingsince","postingdate","dateofposting"],GradeHistory:["gradehistory","yearsineachgrade","gradewiseexperience"],Expertise:["expertise","fieldofexpertise","fieldsofexpertise","workexperience"],PreferredSubsidiaries:["preferredsubsidiaries","preferences","preference"],Exemption:["exemption","exempt","specialground"]};
+const VAC_COLS={ReqID:["reqid","requirementid","vacancyid","id"],Subsidiary:["subsidiary","company"],Unit:["unit","area"],Department:["department","dept"],Grade:["grade"],Discipline:["discipline","cadre"],RequiredExpertise:["requiredexpertise","expertise","fieldofexpertise","field"],MinYears:["minyears","minimumyears","minexperience","experiencerequired"],Positions:["positions","vacancies","posts","count","noofposts"],Priority:["priority"],Remarks:["remarks","notes","justification"]};
+const EMP_REQ=["EmpID","Name","Grade","Subsidiary","Expertise"], VAC_REQ=["Subsidiary","Grade","RequiredExpertise"];
+function rowsToObjects(rows,cols,req){
+  if(rows.length<2) throw new Error("The file needs a header row and at least one data row.");
+  const hdr=rows[0].map(key); const idx={};
+  for(const [c,al] of Object.entries(cols)){const j=hdr.findIndex(h=>al.includes(h)); if(j>=0) idx[c]=j}
+  const miss=req.filter(c=>idx[c]===undefined);
+  if(miss.length) throw new Error("Missing column"+(miss.length>1?"s":"")+": "+miss.join(", ")+". Copy the template on this tab to see the expected headers.");
+  return rows.slice(1).map(r=>{const o={};for(const c of Object.keys(cols))o[c]=idx[c]===undefined?"":String(r[idx[c]]??"").trim();return o});
+}
+const csvCell=v=>{v=v==null?"":String(v);return /[",\n\t]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+const toDelim=(rows,d)=>rows.map(r=>r.map(v=>d==="\t"?String(v??"").replace(/[\t\n]/g," "):csvCell(v)).join(d)).join("\n");
+const objsToRows=(objs,cols)=>[cols,...objs.map(o=>cols.map(c=>o[c]))];
+
+/* ---------------- Normalising ---------------- */
+function parseDate(s){
+  s=String(s||"").trim(); if(!s) return null; let m;
+  if((m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))) return Date.UTC(+m[1],+m[2]-1,+m[3]);
+  if((m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/))) return Date.UTC(+m[3],+m[2]-1,+m[1]);
+  const t=Date.parse(s); return isNaN(t)?null:t;
+}
+const normGrade=g=>String(g||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+function normSub(s){s=String(s||"").trim().toUpperCase().replace(/\s+/g," "); if(/^CIL\b|HQ|HEADQUARTER/.test(s)) return "CIL HQ"; if(s.startsWith("CMPDI")) return "CMPDI"; if(s==="NEC"||s.startsWith("NORTH EASTERN")) return "NEC"; return s}
+function parseExpertise(s){
+  return String(s||"").split(/[;|]/).map(x=>x.trim()).filter(Boolean).map(x=>{
+    const m=x.match(/^(.*?)[\s]*[:=\-–(]\s*(\d+(?:\.\d+)?)\s*(?:yrs?|years?)?\s*\)?$/i);
+    const field=canonField(m?m[1]:x); return {field,k:key(field),years:m?+m[2]:0};
+  });
+}
+const yrs=(from,to)=>from==null?null:Math.max(0,(to-from)/(365.25*864e5));
+function deriveEmp(o,cyc){
+  const doj=parseDate(o.DateOfJoining), gs=parseDate(o.GradeSince), ps=parseDate(o.PostingSince), dob=parseDate(o.DateOfBirth);
+  const hist=String(o.GradeHistory||"").split(/[;|]/).map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.split(/[:=]/);return {g:normGrade(m[0]),y:+m[1]||0}});
+  const grade=normGrade(o.Grade);
+  let yGrade=yrs(gs,cyc); if(yGrade==null){const h=hist.find(h=>h.g===grade);yGrade=h?h.y:0}
+  let service=yrs(doj,cyc); if(service==null) service=hist.reduce((s,h)=>s+h.y,0);
+  let tenure=yrs(ps,cyc); if(tenure==null) tenure=service;
+  return {...o,id:String(o.EmpID),grade,disc:String(o.Discipline||"").trim(),sub:normSub(o.Subsidiary),hist,yGrade,service,tenure,age:yrs(dob,cyc),
+    exp:parseExpertise(o.Expertise),prefs:String(o.PreferredSubsidiaries||"").split(/[;|,]/).map(normSub).filter(Boolean),exempt:String(o.Exemption||"").trim()};
+}
+function deriveSeats(vacs){
+  const seats=[]; vacs.forEach((v,i)=>{const n=Math.max(1,parseInt(v.Positions,10)||1); const id=v.ReqID||("RQ-"+(i+1));
+    const field=canonField(v.RequiredExpertise); const pr=/^h/i.test(v.Priority)?"High":/^l/i.test(v.Priority)?"Low":"Medium";
+    for(let k=1;k<=n;k++) seats.push({id:n>1?id+"/"+k:id,req:id,sub:normSub(v.Subsidiary),unit:v.Unit||"",dept:v.Department||(FIELD_BY_KEY[key(field)]||[])[3]||"",grade:normGrade(v.Grade),disc:String(v.Discipline||"").trim(),field,fk:key(field),minY:Math.max(0,+v.MinYears||0),prio:pr,remarks:v.Remarks||""});
+  }); return seats;
+}
+
+/* ---------------- Matching engine ---------------- */
+function empBlocks(e,R){
+  const b=[];
+  if(R.honorExempt&&e.exempt) b.push("Exempt: "+e.exempt);
+  if(e.tenure<R.minTenure) b.push("Only "+e.tenure.toFixed(1)+" yrs at current posting (min "+R.minTenure+")");
+  if(e.age!=null&&e.age>=R.retireAge-R.retireBuffer) b.push("Retires within "+R.retireBuffer+" yrs (age "+e.age.toFixed(1)+")");
+  return b;
+}
+function evalPair(e,s,R,eb){
+  const blocks=[...(eb||empBlocks(e,R))];
+  if(e.grade!==s.grade) blocks.unshift("Grade "+e.grade+" ≠ "+s.grade);
+  if(R.sameDiscipline&&s.disc&&e.disc&&key(e.disc)!==key(s.disc)) blocks.unshift("Discipline "+e.disc+" ≠ "+s.disc);
+  if(R.interOnly&&e.sub===s.sub) blocks.unshift("Already in "+s.sub);
+  // expertise
+  let best={type:"none",field:"",years:0,c:0};
+  const g=groupOf(s.field);
+  for(const x of e.exp){
+    if(x.k===s.fk){ if(best.type!=="exact"||x.years>best.years) best={type:"exact",field:x.field,years:x.years,c:1}; }
+    else if(best.type!=="exact"&&g&&groupOf(x.field)===g&&R.related/100>=best.c&&x.years>=(best.type==="related"?best.years:0)) best={type:"related",field:x.field,years:x.years,c:R.related/100};
+  }
+  const min=s.minY;
+  let yfit=0; if(best.type!=="none"){ yfit = min>0 ? (best.years>=min ? 0.7+0.3*Math.min(1,(best.years-min)/Math.max(min,2)) : 0.7*best.years/min) : Math.min(1,0.7+0.3*best.years/3); yfit*=best.c; }
+  const pref = e.prefs.length ? (e.prefs.includes(s.sub)?1:0) : 0.4;
+  const comps={field:best.c,years:yfit,grade:Math.min(1,e.yGrade/5),service:Math.min(1,e.service/20),tenure:Math.min(1,e.tenure/10),pref};
+  let tw=0,sc=0; for(const k in R.w){tw+=R.w[k];sc+=R.w[k]*comps[k]} const score=tw?100*sc/tw:0;
+  const why=[];
+  if(best.type==="exact") why.push([best.years>=min?"good":"warn",best.field+" "+fmtY(best.years)+(min?" (needs "+min+")":"")]);
+  else if(best.type==="related") why.push(["warn","Related: "+best.field+" "+fmtY(best.years)]);
+  else why.push(["bad","No "+s.field+" experience"]);
+  why.push(["",fmtY(e.yGrade)+" in "+e.grade]);
+  why.push(["",fmtY(e.tenure)+" at "+e.sub]);
+  if(e.prefs.includes(s.sub)) why.push(["good","Prefers "+s.sub]);
+  return {eligible:blocks.length===0,blocks,score,comps,why,match:best};
+}
+function fmtY(y){y=+y||0;return (Math.round(y*10)/10)+" yr"+(Math.round(y*10)/10===1?"":"s")}
+
+function hungarianMin(a){ // rows n <= cols m
+  const n=a.length,m=a[0].length,INF=1e18,u=new Float64Array(n+1),v=new Float64Array(m+1),p=new Int32Array(m+1),way=new Int32Array(m+1);
+  for(let i=1;i<=n;i++){p[0]=i;let j0=0;const minv=new Float64Array(m+1).fill(INF),used=new Uint8Array(m+1);
+    do{used[j0]=1;const i0=p[j0];let delta=INF,j1=0;
+      for(let j=1;j<=m;j++)if(!used[j]){const cur=a[i0-1][j-1]-u[i0]-v[j];if(cur<minv[j]){minv[j]=cur;way[j]=j0}if(minv[j]<delta){delta=minv[j];j1=j}}
+      for(let j=0;j<=m;j++){if(used[j]){u[p[j]]+=delta;v[j]-=delta}else minv[j]-=delta}
+      j0=j1}while(p[j0]!==0);
+    do{const j1=way[j0];p[j0]=p[j1];j0=j1}while(j0)}
+  const ans=new Array(n).fill(-1);for(let j=1;j<=m;j++)if(p[j])ans[p[j]-1]=j-1;return ans;
+}
+
+let C=null; // computed results
+function compute(){
+  const R=S.rules, cyc=parseDate(R.cycle)||Date.UTC(2026,10,1);
+  const emps=S.emps.map(o=>deriveEmp(o,cyc)); const seats=deriveSeats(S.vacs);
+  const empById=new Map(emps.map(e=>[e.id,e])); const eb=new Map(emps.map(e=>[e.id,empBlocks(e,R)]));
+  const byGrade=new Map(); emps.forEach(e=>{if(!byGrade.has(e.grade))byGrade.set(e.grade,[]);byGrade.get(e.grade).push(e)});
+  const cands=new Map();
+  for(const s of seats){const list=[];for(const e of (byGrade.get(s.grade)||[])){const r=evalPair(e,s,R,eb.get(e.id));if(r.eligible)list.push({e,r})}list.sort((a,b)=>b.r.score-a.r.score);cands.set(s.id,list)}
+  // optimal one-to-one assignment within each grade (and discipline) pool
+  const auto={}; const groups=new Map();
+  seats.forEach(s=>{const k=s.grade+"|"+(R.sameDiscipline?key(s.disc):"");if(!groups.has(k))groups.set(k,[]);groups.get(k).push(s)});
+  for(const gs of groups.values()){
+    const pool=new Map(); const prof=new Map();
+    gs.forEach(s=>{const m=new Map();cands.get(s.id).forEach(c=>{if(c.r.score>=R.threshold){pool.set(c.e.id,c.e);m.set(c.e.id,c.r.score*PRIO_MULT[s.prio])}});prof.set(s.id,m)});
+    const es=[...pool.values()]; gs.forEach(s=>auto[s.id]=null); if(!es.length) continue;
+    const seatRows=gs.length<=es.length; const rows=seatRows?gs:es, cols=seatRows?es:gs;
+    const mat=rows.map(r=>cols.map(c=>{const s=seatRows?r:c,e=seatRows?c:r;return -(prof.get(s.id).get(e.id)||0)}));
+    const ans=hungarianMin(mat);
+    ans.forEach((j,i)=>{if(j<0)return;const s=seatRows?rows[i]:cols[j],e=seatRows?cols[j]:rows[i];if(prof.get(s.id).get(e.id))auto[s.id]=e.id});
+  }
+  const final={}; seats.forEach(s=>{const o=S.overrides[s.id]; final[s.id]=o===undefined?auto[s.id]:(o==="__none"?null:o)});
+  const count={}; Object.values(final).forEach(id=>{if(id)count[id]=(count[id]||0)+1});
+  C={R,cyc,emps,seats,empById,eb,cands,auto,final,count};
+}
+function pairFor(sid,eid){const s=C.seats.find(x=>x.id===sid),e=C.empById.get(eid);if(!s||!e)return null;return evalPair(e,s,C.R,C.eb.get(eid))}
+const tier=s=>s>=75?["strong","Strong"]:s>=60?["good","Good"]:["fair","Fair"];
+
+/* ---------------- State ---------------- */
+const LS="cil-transfer-matching-v1";
+let S; let F={sub:"",grade:"",disc:"",status:"",q:""}; let TAB="suggestions"; let EMP_SEL=""; let DATA_VIEW="emps";
+function freshState(){const d=makeSample();return {emps:d.emps,vacs:d.vacs,rules:structuredClone(DEFAULT_RULES),overrides:{},decisions:{},src:{emps:"Sample data",vacs:"Sample data"}}}
+function load(){try{const t=localStorage.getItem(LS);if(t){const o=JSON.parse(t);if(o&&Array.isArray(o.emps)&&Array.isArray(o.vacs)){o.rules={...structuredClone(DEFAULT_RULES),...o.rules,w:{...DEFAULT_RULES.w,...(o.rules||{}).w}};return o}}}catch(e){}return freshState()}
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+
+/* ---------------- Rendering helpers ---------------- */
+const h=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=sel=>document.querySelector(sel);
+const subTag=s=>`<span class="sub" title="${h((SUBS[s]||{}).name||s)}">${h(s)}</span>`;
+const chips=why=>`<div class="chips">${why.map(([c,t])=>`<span class="chip ${c}">${h(t)}</span>`).join("")}</div>`;
+function scoreCell(sc){const [t,l]=tier(sc);return `<div class="score"><span class="n">${Math.round(sc)}<small>${l}</small></span><div class="bar"><i class="t-${t}" style="width:${Math.max(3,Math.min(100,sc))}%"></i></div></div>`}
+function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+function opts(list,val,all){return `<option value="">${h(all)}</option>`+list.map(x=>`<option value="${h(x)}"${x===val?" selected":""}>${h(x)}</option>`).join("")}
+const uniq=a=>[...new Set(a)].filter(Boolean);
+const sortSubs=a=>a.sort((x,y)=>{const i=SUB_ORDER.indexOf(x),j=SUB_ORDER.indexOf(y);return (i<0?99:i)-(j<0?99:j)||x.localeCompare(y)});
+const sortGrades=a=>a.sort((x,y)=>(parseInt(x.slice(1))||0)-(parseInt(y.slice(1))||0));
+
+function renderAll(){compute();renderHeader();renderKpis();renderTab();save()}
+function renderHeader(){$("#cycleTag").textContent=new Date(C.cyc).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"});
+  const sample=S.src.emps==="Sample data"&&S.src.vacs==="Sample data";$("#srcTag").innerHTML=sample?"<b>Sample data</b> (fictional)":`Employees: <b>${h(S.src.emps)}</b> · Needs: <b>${h(S.src.vacs)}</b>`;
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===TAB))}
+function renderKpis(){
+  const n=C.seats.length, filled=C.seats.filter(s=>C.final[s.id]).length, scores=C.seats.filter(s=>C.final[s.id]).map(s=>(pairFor(s.id,C.final[s.id])||{score:0}).score);
+  const avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;
+  const eligible=C.emps.filter(e=>!C.eb.get(e.id).length).length; const exact=C.seats.filter(s=>{const id=C.final[s.id];if(!id)return false;const p=pairFor(s.id,id);return p&&p.match.type==="exact"}).length;
+  const appr=C.seats.filter(s=>S.decisions[s.id]==="Approve").length;
+  const k=[["Seats to fill",n,`${S.vacs.length} requirement lines`],["Suggested postings",filled,n?Math.round(100*filled/n)+"% of seats":"—"],["No suitable candidate",n-filled,"Needs recruitment or promotion",n-filled>0],["Same-field matches",exact,filled?Math.round(100*exact/filled)+"% of postings":"—"],["Average fit",filled?Math.round(avg):"—","Score out of 100"],["Approved",appr,`${eligible} of ${C.emps.length} executives eligible`]];
+  $("#kpis").innerHTML=k.map(([l,v,s,a])=>`<div class="kpi${a?" alert":""}"><div class="label">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+}
+function renderTab(){({suggestions:renderSugg,employee:renderEmp,flow:renderFlow,rules:renderRules,data:renderData})[TAB]()}
+
+/* ----- Suggestions ----- */
+function renderSugg(){
+  const subs=sortSubs(uniq(C.seats.map(s=>s.sub))), grades=sortGrades(uniq(C.seats.map(s=>s.grade))), discs=uniq(C.seats.map(s=>s.disc)).sort();
+  const q=F.q.toLowerCase();
+  const rows=C.seats.filter(s=>{
+    if(F.sub&&s.sub!==F.sub)return false;if(F.grade&&s.grade!==F.grade)return false;if(F.disc&&s.disc!==F.disc)return false;
+    const id=C.final[s.id];
+    if(F.status==="unfilled"&&id)return false; if(F.status==="filled"&&!id)return false; if(F.status==="conflict"&&!(id&&C.count[id]>1))return false;
+    if(F.status==="pending"&&S.decisions[s.id])return false; if(F.status==="manual"&&S.overrides[s.id]===undefined)return false;
+    if(q){const e=id&&C.empById.get(id);const hay=[s.id,s.sub,s.unit,s.dept,s.field,s.disc,e&&e.Name,e&&e.id,e&&e.sub].join(" ").toLowerCase();if(!hay.includes(q))return false}
+    return true});
+  const conflicts=Object.values(C.count).filter(c=>c>1).length;
+  $("#main").innerHTML=`<section class="panel">
+   ${conflicts?`<div class="banner bad">${conflicts} executive${conflicts>1?"s are":" is"} posted to more than one seat after manual changes. Filter by “Conflicts” to resolve.</div>`:""}
+   <div class="toolbar">
+     <div class="grow"><input type="search" id="fq" placeholder="Search name, EIS no., unit, expertise…" value="${h(F.q)}" aria-label="Search"></div>
+     <select id="fsub" aria-label="Subsidiary">${opts(subs,F.sub,"All subsidiaries")}</select>
+     <select id="fgrade" aria-label="Grade">${opts(grades,F.grade,"All grades")}</select>
+     <select id="fdisc" aria-label="Discipline">${opts(discs,F.disc,"All disciplines")}</select>
+     <select id="fstatus" aria-label="Status">${[["","All seats"],["filled","Suggested"],["unfilled","No candidate"],["pending","Awaiting decision"],["manual","Manually changed"],["conflict","Conflicts"]].map(([v,l])=>`<option value="${v}"${F.status===v?" selected":""}>${l}</option>`).join("")}</select>
+     <button class="btn primary" data-act="export">Decision sheet</button>
+   </div>
+   <div class="frame"><table class="sugg"><thead><tr><th>Requirement</th><th>Suggested posting</th><th>Fit</th><th>Basis</th><th>Decision</th></tr></thead><tbody>
+   ${rows.map(rowSugg).join("")||`<tr><td colspan="5" class="muted">No seats match these filters.</td></tr>`}
+   </tbody></table></div>
+   <p class="muted" style="margin:0;font-size:.82rem">Showing ${rows.length} of ${C.seats.length} seats. Suggestions come from an optimal one-to-one assignment within each grade${C.R.sameDiscipline?" and discipline":""}, so the overall fit across all seats is as high as possible. Pick another candidate from the list to override.</p>
+  </section>`;
+}
+function rowSugg(s){
+  const id=C.final[s.id], e=id&&C.empById.get(id), p=e&&pairFor(s.id,id), man=S.overrides[s.id]!==undefined, dec=S.decisions[s.id]||"";
+  const cl=C.cands.get(s.id)||[]; const top=cl.slice(0,8); if(e&&!top.some(c=>c.e.id===id)){const pp=pairFor(s.id,id);top.unshift({e,r:pp})}
+  const assignedTo={}; C.seats.forEach(x=>{const f=C.final[x.id];if(f&&x.id!==s.id)assignedTo[f]=x.id});
+  const sel=`<select data-seat="${h(s.id)}" class="ovr" aria-label="Choose candidate for ${h(s.id)}">
+     ${top.map(c=>`<option value="${h(c.e.id)}"${c.e.id===id?" selected":""}>${h(c.e.Name)} · ${h(c.e.sub)} · ${Math.round(c.r.score)}${assignedTo[c.e.id]?" (in "+h(assignedTo[c.e.id])+")":""}${c.r.score<C.R.threshold?" · below cut-off":""}</option>`).join("")}
+     <option value="__none"${!id?" selected":""}>Leave vacant</option></select>`;
+  const conflict=id&&C.count[id]>1;
+  return `<tr>
+   <td class="req"><div class="chips" style="margin-bottom:4px"><span class="mono muted">${h(s.id)}</span><span class="pill p-${s.prio}">${s.prio}</span></div>
+     <div class="t">${subTag(s.sub)} ${h(s.unit)}</div><div>${h(s.dept)} · ${h(s.grade)}</div>
+     <div class="muted" style="font-size:.84rem">Needs <b>${h(s.field)}</b>${s.minY?` · ${s.minY}+ yrs`:""}</div>
+     ${s.remarks?`<div class="muted" style="font-size:.78rem">${h(s.remarks)}</div>`:""}</td>
+   <td class="who">${e?`<div style="font-weight:600">${h(e.Name)} <span class="mono muted" style="font-weight:400;font-size:.8rem">${h(e.id)}</span></div>
+       <div style="font-size:.86rem">${subTag(e.sub)} ${h(e.Unit)}<span class="arrow">→</span>${subTag(s.sub)}</div>
+       <div class="muted" style="font-size:.8rem">${h(e.Department||e.disc)} · ${fmtY(e.service)} service</div>
+       <div class="chips" style="margin-top:4px">${man?`<span class="chip man">Manual choice</span>`:""}${conflict?`<span class="chip bad">Also posted elsewhere</span>`:""}${p&&!p.eligible?`<span class="chip bad">${h(p.blocks[0])}</span>`:""}</div>`
+     :`<div class="empty-seat">No suitable internal candidate</div><div class="muted" style="font-size:.82rem">${cl.length?`${cl.length} eligible, none above cut-off ${C.R.threshold}`:"No eligible executive in this grade"}${C.R.sameDiscipline?" and discipline":""}.</div>`}
+     ${(top.length||id)?sel:""}</td>
+   <td class="fit">${p?scoreCell(p.score):`<span class="muted">—</span>`}</td>
+   <td>${p?chips(p.why):`<span class="muted" style="font-size:.85rem">Consider promotion, fresh recruitment or relaxing the minimum years.</span>`}</td>
+   <td class="dec"><div class="seg" role="group" aria-label="Decision for ${h(s.id)}">${["Approve","Hold","Reject"].map(v=>`<button data-act="dec" data-seat="${h(s.id)}" data-v="${v}" aria-pressed="${dec===v}">${v}</button>`).join("")}</div></td>
+  </tr>`;
+}
+
+/* ----- Employee view ----- */
+function renderEmp(){
+  if(!EMP_SEL||!C.empById.get(EMP_SEL)){const firstAssigned=C.seats.map(s=>C.final[s.id]).find(Boolean);EMP_SEL=firstAssigned||(C.emps[0]||{}).id||""}
+  const e=C.empById.get(EMP_SEL);
+  const list=[...C.emps].sort((a,b)=>a.Name.localeCompare(b.Name));
+  let body="<p class='muted'>No employees loaded.</p>";
+  if(e){
+    const blocks=C.eb.get(e.id); const posted=C.seats.filter(s=>C.final[s.id]===e.id);
+    const ranked=C.seats.filter(s=>s.grade===e.grade&&(!C.R.sameDiscipline||!s.disc||key(s.disc)===key(e.disc))).map(s=>({s,r:evalPair(e,s,C.R,blocks)})).sort((a,b)=>(b.r.eligible-a.r.eligible)||(b.r.score-a.r.score));
+    body=`<div class="grid2">
+     <div class="card"><div><div class="label">${h(e.id)}</div><h2>${h(e.Name)}</h2><div class="muted">${h(e.grade)} · ${h(e.disc)} · ${subTag(e.sub)} ${h(e.Unit)}</div></div>
+       <dl class="kv"><dt>Department</dt><dd>${h(e.Department||"—")}</dd><dt>Total service</dt><dd class="num">${fmtY(e.service)}</dd><dt>In current grade</dt><dd class="num">${fmtY(e.yGrade)}</dd><dt>At current posting</dt><dd class="num">${fmtY(e.tenure)}</dd><dt>Age at cycle date</dt><dd class="num">${e.age==null?"—":e.age.toFixed(1)}</dd><dt>Preferences</dt><dd>${e.prefs.length?e.prefs.map(subTag).join(" "):"<span class='muted'>None stated</span>"}</dd></dl>
+       <div><div class="label">Years in each grade</div><div class="chips" style="margin-top:4px">${e.hist.length?e.hist.map(x=>`<span class="chip">${h(x.g)} · ${fmtY(x.y)}</span>`).join(""):"<span class='muted'>Not provided</span>"}</div></div>
+       <div><div class="label">Field of expertise</div><div class="chips" style="margin-top:4px">${e.exp.map(x=>`<span class="chip good">${h(x.field)} · ${fmtY(x.years)}</span>`).join("")||"<span class='muted'>Not provided</span>"}</div></div>
+     </div>
+     <div class="card"><h3>This cycle</h3>
+       ${blocks.length?`<div class="banner bad">Not eligible for transfer: ${blocks.map(h).join("; ")}.</div>`:`<div class="banner good">Eligible for transfer this cycle.</div>`}
+       ${posted.length?posted.map(s=>{const p=evalPair(e,s,C.R,blocks);return `<div><div class="label">Suggested posting</div><div style="font-weight:600;margin-top:2px">${subTag(e.sub)}<span class="arrow">→</span>${subTag(s.sub)} ${h(s.unit)} · ${h(s.dept)} <span class="mono muted">${h(s.id)}</span></div><div style="max-width:260px;margin-top:6px">${scoreCell(p.score)}</div><div style="margin-top:6px">${chips(p.why)}</div></div>`}).join(""):`<p class="muted">Not suggested for any seat${blocks.length?"":`, either because no seat needs this profile or another executive fits better`}.</p>`}
+     </div></div>
+     <h3>All ${h(e.grade)} seats${C.R.sameDiscipline?" in "+h(e.disc):""}, ranked for this executive</h3>
+     <div class="frame"><table class="rank" style="min-width:760px"><thead><tr><th>Seat</th><th>Requirement</th><th>Fit</th><th>Basis / why not</th><th>Currently suggested</th></tr></thead><tbody>
+      ${ranked.map(({s,r})=>{const f=C.final[s.id],fe=f&&C.empById.get(f);return `<tr><td class="mono">${h(s.id)}</td><td>${subTag(s.sub)} ${h(s.unit)}<div class="muted" style="font-size:.84rem">${h(s.field)}${s.minY?" · "+s.minY+"+ yrs":""} · <span class="pill p-${s.prio}">${s.prio}</span></div></td><td style="width:120px">${scoreCell(r.score)}</td><td>${r.eligible?chips(r.why):`<span class="chip bad">${h(r.blocks.join("; "))}</span>`}</td><td>${fe?(f===e.id?"<b>This executive</b>":h(fe.Name)):"<span class='muted'>Vacant</span>"}</td></tr>`}).join("")||`<tr><td colspan="5" class="muted">No open seats in this grade${C.R.sameDiscipline?" and discipline":""}.</td></tr>`}
+     </tbody></table></div>`;
+  }
+  $("#main").innerHTML=`<section class="panel"><div class="toolbar"><div class="field grow"><label class="label" for="empPick">Executive</label>
+    <select id="empPick">${list.map(x=>`<option value="${h(x.id)}"${x.id===EMP_SEL?" selected":""}>${h(x.Name)} · ${h(x.id)} · ${h(x.grade)} · ${h(x.sub)}</option>`).join("")}</select></div></div>${body}</section>`;
+}
+
+/* ----- Flow ----- */
+function renderFlow(){
+  const moves=C.seats.filter(s=>C.final[s.id]).map(s=>({from:C.empById.get(C.final[s.id]).sub,to:s.sub}));
+  const subs=sortSubs(uniq([...C.seats.map(s=>s.sub),...C.emps.map(e=>e.sub)]));
+  const M={};moves.forEach(m=>{M[m.from+">"+m.to]=(M[m.from+">"+m.to]||0)+1});const mx=Math.max(1,...Object.values(M));
+  const out=s=>moves.filter(m=>m.from===s).length, inn=s=>moves.filter(m=>m.to===s).length;
+  const cell=v=>v?`<span class="heat" style="display:block;background:color-mix(in srgb,var(--accent) ${Math.round(15+70*v/mx)}%,transparent);color:${v/mx>0.5?"var(--accent-ink)":"var(--ink)"}">${v}</span>`:`<span class="muted">·</span>`;
+  $("#main").innerHTML=`<section class="panel">
+   <div class="note"><b>Read rows as “from”, columns as “to”.</b> Every executive moved out opens a seat at the origin. Check subsidiaries with a large net outflow before approving, and feed the seats they lose into next year's requirement list.</div>
+   <div class="frame"><table class="flow" style="min-width:${120+subs.length*60}px"><thead><tr><th>From \\ To</th>${subs.map(s=>`<th>${h(s)}</th>`).join("")}<th>Out</th></tr></thead><tbody>
+    ${subs.map(f=>`<tr><td>${subTag(f)}</td>${subs.map(t=>`<td>${f===t?"<span class='muted'>—</span>":cell(M[f+">"+t]||0)}</td>`).join("")}<td class="num"><b>${out(f)}</b></td></tr>`).join("")}
+    <tr><td class="label">In</td>${subs.map(t=>`<td class="num"><b>${inn(t)}</b></td>`).join("")}<td class="num"><b>${moves.length}</b></td></tr></tbody></table></div>
+   <h3>By subsidiary</h3>
+   <div class="frame"><table style="min-width:640px"><thead><tr><th>Subsidiary</th><th>Seats</th><th>Filled</th><th>Still vacant</th><th>Executives in</th><th>Executives out</th><th>Net</th></tr></thead><tbody>
+    ${subs.map(s=>{const st=C.seats.filter(x=>x.sub===s),fl=st.filter(x=>C.final[x.id]).length,net=inn(s)-out(s);return `<tr><td>${subTag(s)} <span class="muted">${h((SUBS[s]||{}).name||"")}</span></td><td class="num">${st.length}</td><td class="num">${fl}</td><td class="num"${st.length-fl?" style='color:var(--bad)'":""}>${st.length-fl}</td><td class="num">${inn(s)}</td><td class="num">${out(s)}</td><td class="num" style="color:${net<0?"var(--bad)":net>0?"var(--good)":"var(--muted)"}">${net>0?"+":""}${net}</td></tr>`}).join("")}
+   </tbody></table></div></section>`;
+}
+
+/* ----- Rules ----- */
+function renderRules(){
+  const R=S.rules, tw=Object.values(R.w).reduce((a,b)=>a+b,0)||1;
+  $("#main").innerHTML=`<section class="panel">
+   <div class="card"><h2>How a posting is suggested</h2><div class="steps">
+     <div class="step"><div class="k">Filter</div><p>Only executives in the seat's grade${R.sameDiscipline?" and discipline":""} are considered. Those with short tenure, near retirement or a recorded exemption are set aside${R.interOnly?", and nobody is “transferred” into the subsidiary they already serve":""}.</p></div>
+     <div class="step"><div class="k">Score</div><p>Each executive–seat pair gets a fit score out of 100 from the weighted factors below. Same field of expertise and enough years in it carry the most weight.</p></div>
+     <div class="step"><div class="k">Assign</div><p>An optimal assignment (Hungarian method) gives each seat at most one executive and each executive at most one seat, maximising total fit. High-priority seats are weighted up 15%. Pairs below the cut-off are left vacant.</p></div>
+   </div></div>
+   <div class="grid2">
+   <div class="card"><h3>Eligibility</h3><div class="rules">
+     <div class="rule"><label class="label" for="r_cycle">Cycle date</label><input type="date" id="r_cycle" data-rule="cycle" value="${h(R.cycle)}"><span class="hint">Service, tenure and age are counted to this date.</span></div>
+     <div class="rule"><label class="label" for="r_minTenure">Min. years at current posting</label><input type="number" id="r_minTenure" data-rule="minTenure" min="0" max="15" step="0.5" value="${R.minTenure}"></div>
+     <div class="rule"><label class="label" for="r_retireAge">Superannuation age</label><input type="number" id="r_retireAge" data-rule="retireAge" min="55" max="65" value="${R.retireAge}"></div>
+     <div class="rule"><label class="label" for="r_retireBuffer">Skip if retiring within (yrs)</label><input type="number" id="r_retireBuffer" data-rule="retireBuffer" min="0" max="5" step="0.5" value="${R.retireBuffer}"></div>
+     <div class="rule"><label class="label" for="r_threshold">Minimum fit score to suggest</label><input type="number" id="r_threshold" data-rule="threshold" min="0" max="100" value="${R.threshold}"><span class="hint">Below this, the seat stays vacant.</span></div>
+     <div class="rule"><label class="label" for="r_related">Related-field credit (%)</label><input type="number" id="r_related" data-rule="related" min="0" max="100" step="5" value="${R.related}"><span class="hint">e.g. R&amp;R experience for an L&amp;R seat.</span></div>
+   </div>
+   <label class="check"><input type="checkbox" id="r_sameDiscipline" data-rule="sameDiscipline"${R.sameDiscipline?" checked":""}><span>Same discipline / cadre only</span></label>
+   <label class="check"><input type="checkbox" id="r_interOnly" data-rule="interOnly"${R.interOnly?" checked":""}><span>Inter-subsidiary moves only</span></label>
+   <label class="check"><input type="checkbox" id="r_honorExempt" data-rule="honorExempt"${R.honorExempt?" checked":""}><span>Respect recorded exemptions (spouse posting, medical ground, etc.)</span></label>
+   </div>
+   <div class="card"><h3>Weights in the fit score</h3>
+     ${Object.keys(R.w).map(k=>`<div><div class="w"><label for="w_${k}">${WEIGHT_LABELS[k][0]}</label><input type="range" id="w_${k}" data-w="${k}" min="0" max="60" value="${R.w[k]}"><span class="num" style="text-align:right">${Math.round(100*R.w[k]/tw)}%</span></div><div class="muted" style="font-size:.78rem">${WEIGHT_LABELS[k][1]}</div></div>`).join("")}
+     <div class="toolbar"><button class="btn" data-act="resetRules">Restore defaults</button></div>
+   </div></div></section>`;
+}
+
+/* ----- Data ----- */
+const EMP_HDR=Object.keys(EMP_COLS), VAC_HDR=Object.keys(VAC_COLS);
+function renderData(){
+  const isE=DATA_VIEW==="emps", rows=isE?S.emps:S.vacs, hdr=isE?EMP_HDR:VAC_HDR;
+  $("#main").innerHTML=`<section class="panel">
+   <div class="grid2">
+    <div class="drop" data-drop="emps"><h3>Employee data <span class="muted" style="font-weight:400">· HRMS export</span></h3>
+      <p class="muted" style="margin:0;font-size:.86rem">${S.emps.length} executives · source: ${h(S.src.emps)}. CSV or tab-separated; drop a file here or choose one.</p>
+      <div class="toolbar"><label class="btn small" for="upE">Choose file</label><input type="file" id="upE" accept=".csv,.tsv,.txt" hidden data-up="emps"><button class="btn small" data-act="tpl" data-k="emps">Copy template</button><button class="btn small" data-act="dump" data-k="emps">Export current</button></div><div class="err" id="errE"></div></div>
+    <div class="drop" data-drop="vacs"><h3>Requirements <span class="muted" style="font-weight:400">· from management</span></h3>
+      <p class="muted" style="margin:0;font-size:.86rem">${S.vacs.length} lines, ${C.seats.length} seats · source: ${h(S.src.vacs)}.</p>
+      <div class="toolbar"><label class="btn small" for="upV">Choose file</label><input type="file" id="upV" accept=".csv,.tsv,.txt" hidden data-up="vacs"><button class="btn small" data-act="tpl" data-k="vacs">Copy template</button><button class="btn small" data-act="dump" data-k="vacs">Export current</button></div><div class="err" id="errV"></div></div>
+   </div>
+   <div class="note"><b>Formats.</b> Expertise: <span class="mono">L&amp;R:5;R&amp;R:2</span> (field:years, separated by semicolons). Years in each grade: <span class="mono">E2:3;E3:4;E4:2.5</span>. Dates as YYYY-MM-DD or DD-MM-YYYY. Preferences: <span class="mono">CCL;NCL</span>. Any non-empty Exemption keeps the executive out of this cycle. Requirement lines with Positions above 1 become that many seats.</div>
+   <div class="toolbar"><div class="seg" role="group" aria-label="Table"><button data-act="dview" data-v="emps" aria-pressed="${isE}">Employees (${S.emps.length})</button><button data-act="dview" data-v="vacs" aria-pressed="${!isE}">Requirements (${S.vacs.length})</button></div>
+     <span class="grow"></span><button class="btn small" data-act="sample">Reload sample data</button><button class="btn small" data-act="clearDec">Clear decisions &amp; overrides</button></div>
+   <div class="frame"><table style="min-width:1200px;font-size:.84rem"><thead><tr>${hdr.map(c=>`<th>${h(c)}</th>`).join("")}</tr></thead><tbody>
+    ${rows.slice(0,300).map(r=>`<tr>${hdr.map(c=>`<td>${h(r[c])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+   ${rows.length>300?`<p class="muted">Showing first 300 of ${rows.length} rows.</p>`:""}
+  </section>`;
+}
+function ingest(kind,text,name){
+  try{const rows=parseCSV(text);const objs=rowsToObjects(rows,kind==="emps"?EMP_COLS:VAC_COLS,kind==="emps"?EMP_REQ:VAC_REQ);
+    if(kind==="emps"){const ids=new Set(),dup=[];objs.forEach(o=>{if(ids.has(o.EmpID))dup.push(o.EmpID);ids.add(o.EmpID)});if(dup.length)throw new Error("Duplicate EmpID: "+dup.slice(0,5).join(", "))}
+    S[kind]=objs;S.src[kind]=name;S.overrides={};S.decisions={};renderAll();toast(`Loaded ${objs.length} ${kind==="emps"?"executives":"requirement lines"} from ${name}`)}
+  catch(err){const el=$(kind==="emps"?"#errE":"#errV");if(el)el.textContent=err.message}
+}
+
+/* ----- Export ----- */
+const SHEET_HDR=["Seat","Subsidiary","Unit","Department","Grade","Discipline","Required expertise","Min years","Priority","EmpID","Name","From subsidiary","From unit","From department","Matched expertise","Years in field","Years in grade","Years at posting","Fit score","Selection","Decision"];
+function sheetRows(){return C.seats.map(s=>{const id=C.final[s.id],e=id&&C.empById.get(id),p=e&&pairFor(s.id,id);
+  return [s.id,s.sub,s.unit,s.dept,s.grade,s.disc,s.field,s.minY,s.prio,e?e.id:"",e?e.Name:"No suitable internal candidate",e?e.sub:"",e?e.Unit:"",e?e.Department:"",p?p.match.field+(p.match.type==="related"?" (related)":""):"",p?p.match.years:"",e?e.yGrade.toFixed(1):"",e?e.tenure.toFixed(1):"",p?Math.round(p.score):"",e?(S.overrides[s.id]!==undefined?"Manual":"Suggested"):"",S.decisions[s.id]||"Pending"]})}
+function showExport(title,rows,note){
+  const csv=toDelim(rows,","), tsv=toDelim(rows,"\t");
+  $("#layer").innerHTML=`<div class="overlay" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-label="${h(title)}">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><h2>${h(title)}</h2><button class="btn small" data-act="close">Close</button></div>
+    <p class="muted" style="margin:0;font-size:.86rem">${note}</p>
+    <textarea id="expText" readonly spellcheck="false">${h(csv)}</textarea>
+    <div class="toolbar"><button class="btn primary" data-act="copy" data-fmt="tsv">Copy for Excel</button><button class="btn" data-act="copy" data-fmt="csv">Copy as CSV</button></div></div></div>`;
+  $("#layer").dataset.csv=csv;$("#layer").dataset.tsv=tsv;
+}
+function copyText(t,ok){const fall=()=>{const ta=$("#expText");if(ta){ta.focus();ta.select()}toast("Copy blocked here. Text is selected: press Ctrl+C.")};
+  try{navigator.clipboard.writeText(t).then(()=>toast(ok),fall)}catch(e){fall()}}
+
+/* ---------------- Events ---------------- */
+document.addEventListener("click",ev=>{
+  const tab=ev.target.closest("#tabs button");if(tab){TAB=tab.dataset.tab;try{history.replaceState(null,"","#"+TAB)}catch(e){}renderHeader();renderTab();return}
+  const a=ev.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
+  if(act==="close"&&(ev.target===a||a.tagName==="BUTTON")){$("#layer").innerHTML="";return}
+  if(act==="dec"){const s=a.dataset.seat,v=a.dataset.v;if(S.decisions[s]===v)delete S.decisions[s];else S.decisions[s]=v;renderAll();return}
+  if(act==="export"){showExport("Decision sheet",[SHEET_HDR,...sheetRows()],"One row per seat with the suggested executive, the basis for the match and the decision recorded here. Copy for Excel pastes straight into a sheet for the competent authority.");return}
+  if(act==="tpl"){const k=a.dataset.k;const hdr=k==="emps"?EMP_HDR:VAC_HDR;const ex=(k==="emps"?S.emps:S.vacs).slice(0,3);showExport(k==="emps"?"Employee data template":"Requirement template",objsToRows(ex,hdr),"Header row plus three example rows. Keep the header names; extra columns are ignored.");return}
+  if(act==="dump"){const k=a.dataset.k;showExport(k==="emps"?"Employee data":"Requirements",objsToRows(k==="emps"?S.emps:S.vacs,k==="emps"?EMP_HDR:VAC_HDR),"The full table currently loaded.");return}
+  if(act==="copy"){copyText($("#layer").dataset[a.dataset.fmt],a.dataset.fmt==="tsv"?"Copied. Paste into Excel.":"Copied as CSV.");return}
+  if(act==="dview"){DATA_VIEW=a.dataset.v;renderData();return}
+  if(act==="sample"){const r=S.rules;S=freshState();S.rules=r;renderAll();toast("Sample data reloaded");return}
+  if(act==="clearDec"){S.overrides={};S.decisions={};renderAll();toast("Decisions and overrides cleared");return}
+  if(act==="resetRules"){S.rules=structuredClone(DEFAULT_RULES);renderAll();return}
+});
+document.addEventListener("change",ev=>{
+  const t=ev.target;
+  if(t.classList.contains("ovr")){const s=t.dataset.seat,v=t.value;if((v==="__none"&&C.auto[s]===null)||v===C.auto[s])delete S.overrides[s];else S.overrides[s]=v;renderAll();return}
+  if(t.id==="empPick"){EMP_SEL=t.value;renderEmp();return}
+  if(["fsub","fgrade","fdisc","fstatus"].includes(t.id)){F[{fsub:"sub",fgrade:"grade",fdisc:"disc",fstatus:"status"}[t.id]]=t.value;renderSugg();return}
+  if(t.dataset.rule){const k=t.dataset.rule;S.rules[k]=t.type==="checkbox"?t.checked:t.type==="number"?(+t.value||0):t.value;renderAll();return}
+  if(t.dataset.up&&t.files&&t.files[0]){const f=t.files[0],r=new FileReader();r.onload=()=>ingest(t.dataset.up,r.result,f.name);r.readAsText(f)}
+});
+let wT;document.addEventListener("input",ev=>{const t=ev.target;
+  if(t.id==="fq"){F.q=t.value;clearTimeout(wT);wT=setTimeout(()=>{const pos=t.selectionStart;renderSugg();const n=$("#fq");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}},200);return}
+  if(t.dataset.w){S.rules.w[t.dataset.w]=+t.value;clearTimeout(wT);wT=setTimeout(()=>{const id=t.id;renderAll();const n=document.getElementById(id);if(n)n.focus()},120)}});
+document.addEventListener("dragover",ev=>{const d=ev.target.closest("[data-drop]");if(d){ev.preventDefault();d.classList.add("over")}});
+document.addEventListener("dragleave",ev=>{const d=ev.target.closest("[data-drop]");if(d)d.classList.remove("over")});
+document.addEventListener("drop",ev=>{const d=ev.target.closest("[data-drop]");if(!d)return;ev.preventDefault();d.classList.remove("over");const f=ev.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingest(d.dataset.drop,r.result,f.name);r.readAsText(f)});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape")$("#layer").innerHTML=""});
+
+S=load();
+const hsh=(location.hash||"").slice(1);if(["suggestions","employee","flow","rules","data"].includes(hsh))TAB=hsh;
+renderAll();
+window.__cilSampleCSV=()=>{const d=makeSample();return {emps:toDelim(objsToRows(d.emps,EMP_HDR),","),vacs:toDelim(objsToRows(d.vacs,VAC_HDR),",")}};
+</script>
+
 </body>
 </html>

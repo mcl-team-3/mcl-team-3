@@ -71,13 +71,34 @@
   commit and push.
 
 ## Our tool (filled in during Phase 1)
-- Team:
-- Tool name:
-- Problem:
-- Who records / who decides:
-- Table name and columns:
-- Pages: index.html = entry page; dashboard.html = dashboard
+- Team: MCL team 3
+- Tool name: CIL Transfer Matching
+- Problem: CIL issues transfer orders every November against grade vacancies
+  in the subsidiaries, but postings are made without criteria. The tool
+  matches each executive's field of expertise and years of experience to
+  what each subsidiary needs, and suggests postings for higher management.
+- Who records / who decides: HR uploads the HRMS employee export and the
+  requirement list from management; higher management approves, holds or
+  rejects each suggested posting.
+- Table name and columns: none yet. Data is loaded from CSV files in the
+  browser (templates/ folder) and kept in the browser only. Employee columns:
+  EmpID, Name, Grade, Discipline, Subsidiary, Unit, Department, DateOfBirth,
+  DateOfJoining, GradeSince, PostingSince, GradeHistory, Expertise,
+  PreferredSubsidiaries, Exemption. Requirement columns: ReqID, Subsidiary,
+  Unit, Department, Grade, Discipline, RequiredExpertise, MinYears,
+  Positions, Priority, Remarks.
+- Pages: index.html = the whole tool (tabs: Posting suggestions, Employee
+  view, Transfer flow, Rules & weights, Data); no dashboard.html yet
 
 ## Progress Log (newest entry at the bottom)
 - Phase 0 (starter): placeholder index.html, config.js without settings and
   this CLAUDE.md. Next: Phase 1 - the table and the entry page.
+- 2026-11-27 (builder: Claude): replaced the placeholder index.html with the
+  CIL Transfer Matching tool, plus CSV templates in templates/. Works: loads
+  110 made-up executives and 37 made-up vacancies; filters by grade,
+  discipline, tenure, retirement and exemptions; scores fit out of 100;
+  assigns postings with the Hungarian method; override, Approve/Hold/Reject,
+  transfer-flow matrix, adjustable rules, CSV upload, decision sheet copy
+  for Excel. Known gaps: does not use Supabase yet, so decisions are saved
+  only in each person's own browser. Next: save decisions to a Supabase
+  table if the team wants shared decisions.
