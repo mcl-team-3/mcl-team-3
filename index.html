@@ -4,16 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CIL Transfer Matching</title>
+<script>try{var t=localStorage.getItem("ctm-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <style>
-/* Layout: a working desk. Header + KPI strip, then tabbed work areas; tables scroll inside their own frames. */
+/* Layout: HR-portal shell. Fixed left menu (drawer on phones), sticky top bar, page content in a centred column. */
 :root{
   --bg:#F2F4F1; --surface:#FFFFFF; --sunk:#E9ECE8; --ink:#1A2220; --muted:#5A6661; --line:#D7DDD8;
   --accent:#1D5884; --accent-ink:#FFFFFF; --accent-soft:#E1ECF5;
   --ember:#A9581A;
   --good:#2C7A4B; --good-soft:#E0F0E5; --warn:#9A630A; --warn-soft:#FAEFD7; --bad:#AE3A31; --bad-soft:#F7E2DF;
   --bar:#E4E8E4;
+  --side:#16302A; --side-ink:#DCE7E2; --side-muted:#8FA8A0; --side-hover:#21413A; --side-active:#2B5248; --side-line:#24423B;
+  --s1:#2a78d6; --s2:#eb6834; --s-neutral:#B9C1BC; --st-good:#0ca30c; --st-warn:#fab219; --st-crit:#d03b3b; --st-none:#C9CFCB;
   --f-display:"Archivo","Segoe UI",system-ui,sans-serif;
   --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
@@ -23,18 +27,22 @@
   --bg:#121715; --surface:#1A201E; --sunk:#151A18; --ink:#E5EAE7; --muted:#97A39E; --line:#2C3431;
   --accent:#7EB5DF; --accent-ink:#0C1720; --accent-soft:#1C2C38; --ember:#E19B5A;
   --good:#6BC28D; --good-soft:#18301F; --warn:#E2B157; --warn-soft:#352A13; --bad:#EE8379; --bad-soft:#3A1E1B; --bar:#28302D;
+  --side:#0D1311; --side-ink:#D3DED9; --side-muted:#7E948C; --side-hover:#18211E; --side-active:#1F3530; --side-line:#1C2623;
+  --s1:#3987e5; --s2:#d95926; --s-neutral:#4A5450; --st-none:#3A433F;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121715; --surface:#1A201E; --sunk:#151A18; --ink:#E5EAE7; --muted:#97A39E; --line:#2C3431;
   --accent:#7EB5DF; --accent-ink:#0C1720; --accent-soft:#1C2C38; --ember:#E19B5A;
   --good:#6BC28D; --good-soft:#18301F; --warn:#E2B157; --warn-soft:#352A13; --bad:#EE8379; --bad-soft:#3A1E1B; --bar:#28302D;
+  --side:#0D1311; --side-ink:#D3DED9; --side-muted:#7E948C; --side-hover:#18211E; --side-active:#1F3530; --side-line:#1C2623;
+  --s1:#3987e5; --s2:#d95926; --s-neutral:#4A5450; --st-none:#3A433F;
   color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
-.wrap{max-width:1280px;margin:0 auto}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body)}
 h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
-h1{font-size:1.6rem;font-weight:800}
+h1{font-size:1.45rem;font-weight:800}
 h2{font-size:1.15rem;font-weight:700}
 h3{font-size:1rem;font-weight:600}
 .mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
@@ -42,42 +50,123 @@ h3{font-size:1rem;font-weight:600}
 .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 button,select,input,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-block:24px 16px;border-bottom:1px solid var(--line)}
-header.top p{margin:4px 0 0;color:var(--muted);max-width:68ch}
-.cycle{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--sunk);border:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+/* ---- Shell ---- */
+.app{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100%}
+.side{background:var(--side);color:var(--side-ink);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:18px 12px calc(14px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));overflow-y:auto;z-index:30}
+.brand{display:flex;gap:10px;align-items:center;padding:4px 8px 18px}
+.brand .mark{width:36px;height:36px;border-radius:9px;background:var(--ember);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:.9rem;letter-spacing:.02em}
+.brand b{font-family:var(--f-display);font-size:1rem;display:block;line-height:1.2;color:#fff}
+:root[data-theme="dark"] .brand b{color:var(--side-ink)}
+.brand span{font-size:.75rem;color:var(--side-muted)}
+.nav-group{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.nav-group .gl{font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;color:var(--side-muted);padding:6px 10px 4px;font-weight:600}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:8px;color:var(--side-ink);text-decoration:none;font-weight:500;min-height:42px}
+.nav a:hover{background:var(--side-hover)}
+.nav a[aria-current="page"]{background:var(--side-active);color:#fff;box-shadow:inset 3px 0 0 var(--ember)}
+.nav a .cnt{margin-left:auto;font-size:.72rem;font-family:var(--f-mono);background:var(--ember);color:#fff;border-radius:999px;padding:0 7px;line-height:1.6}
+.nav a .cnt.soft{background:var(--side-line);color:var(--side-ink)}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--side-line)}
+.theme-seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--side-hover);border-radius:9px;padding:3px;gap:2px}
+.theme-seg button{background:none;border:0;color:var(--side-muted);border-radius:7px;padding:6px 4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:.8rem;min-height:34px}
+.theme-seg button[aria-pressed="true"]{background:var(--side-active);color:#fff}
+.me{display:flex;align-items:center;gap:10px;padding:6px 8px}
+.me .av{width:34px;height:34px;border-radius:50%;background:var(--side-active);display:grid;place-items:center;font-weight:600;font-size:.8rem;color:#fff;flex:none}
+.me .t{min-width:0;line-height:1.3}
+.me .t b{display:block;font-size:.88rem;color:var(--side-ink)}
+.me .t span{font-size:.75rem;color:var(--side-muted)}
+.me button{margin-left:auto;background:none;border:1px solid var(--side-line);color:var(--side-ink);border-radius:8px;padding:6px;cursor:pointer;display:grid;place-items:center;min-width:36px;min-height:36px}
+.me button:hover{background:var(--side-hover)}
+
+.maincol{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:10px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:12px}
+.topbar .ttl{min-width:0}
+.topbar .ttl .crumb{font-size:.75rem;color:var(--muted)}
+.topbar .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.iconbtn{background:var(--surface);border:1px solid var(--line);border-radius:9px;min-width:40px;min-height:40px;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.iconbtn:hover{border-color:var(--muted)}
+#menuBtn{display:none}
+.content{padding-block:20px 48px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));max-width:1320px;width:100%}
+.scrim{display:none}
+@media (max-width:960px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;width:min(280px,86vw);transform:translateX(-102%);transition:transform .2s ease;padding-top:calc(18px + env(safe-area-inset-top,0px))}
+  body.nav-open .side{transform:none}
+  body.nav-open .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25}
+  #menuBtn{display:grid}
+  .topbar,.content{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .hide-sm{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){.side{transition:none}}
+
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:.8rem;color:var(--muted);white-space:nowrap}
 .tag b{color:var(--ink);font-weight:600}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block}
-.who-tag{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
-.who-tag b{color:var(--accent)}
+section.panel{display:flex;flex-direction:column;gap:16px}
 
-.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-block:16px}
-.kpi{background:var(--surface);padding:12px 14px;min-width:0}
-.kpi .v{font-family:var(--f-display);font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+/* ---- Home ---- */
+.hello{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.hello h1{font-size:1.75rem}
+.hello p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.home-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+@media (max-width:1100px){.home-grid{grid-template-columns:minmax(0,1fr)}}
+.tasks{display:flex;flex-direction:column}
+.task{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit;cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left}
+.task:last-child{border-bottom:0}
+.task:hover .tt{color:var(--accent)}
+.task .n{min-width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:1.1rem;font-variant-numeric:tabular-nums;padding:0 6px}
+.task .n.bad{background:var(--bad-soft);color:var(--bad)} .task .n.warn{background:var(--warn-soft);color:var(--warn)} .task .n.good{background:var(--good-soft);color:var(--good)} .task .n.info{background:var(--accent-soft);color:var(--accent)}
+.task .tt{font-weight:600}
+.task .ts{font-size:.85rem;color:var(--muted)}
+.task .go{margin-left:auto;color:var(--muted)}
+.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.quick{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.qa{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:inherit;min-height:110px}
+.qa:hover{border-color:var(--accent)}
+.qa .ic{width:38px;height:38px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.qa b{font-size:.95rem}
+.qa span{font-size:.82rem;color:var(--muted)}
+.stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;counter-reset:st}
+@media (max-width:760px){.stages{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;padding:12px 14px 12px 14px;border-top:3px solid var(--line)}
+.stage.done{border-top-color:var(--good)} .stage.now{border-top-color:var(--ember)}
+.stage .sn{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.stage.done .sn{color:var(--good)} .stage.now .sn{color:var(--ember)}
+.stage b{display:block;margin-top:2px}
+.stage span{font-size:.84rem;color:var(--muted)}
+.policy{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+
+/* ---- Dashboard ---- */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.6rem;font-weight:700;line-height:1.2}
 .kpi .s{font-size:.78rem;color:var(--muted)}
 .kpi.alert .v{color:var(--bad)}
-@media (max-width:900px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:480px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.charts{grid-template-columns:minmax(0,1fr)}}
+.chart-card .cv{position:relative;width:100%}
+.chart-card details{font-size:.85rem}
+.chart-card summary{cursor:pointer;color:var(--accent)}
+.meter{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;background:var(--surface)}
+.meter i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.85rem}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
 
-nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
-nav.tabs button{background:none;border:0;padding:12px 14px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
-nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
-nav.tabs button:hover{color:var(--ink)}
-section.panel{padding-top:16px;display:flex;flex-direction:column;gap:16px}
-
+/* ---- Shared components ---- */
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .toolbar .grow{flex:1 1 180px;min-width:0}
 .field{display:flex;flex-direction:column;gap:3px;min-width:0}
-input[type=search],input[type=text],input[type=date],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-width:0;max-width:100%}
+input[type=search],input[type=text],input[type=date],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0;max-width:100%;min-height:40px}
 input[type=search]{width:100%}
 input:disabled,select:disabled,textarea:disabled{opacity:.6;cursor:not-allowed}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;white-space:nowrap;min-height:40px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;white-space:nowrap;min-height:40px;text-decoration:none;color:inherit}
 .btn:hover{border-color:var(--muted)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.danger{color:var(--bad);border-color:var(--bad)}
 .btn.small{padding:4px 10px;font-size:.85rem;min-height:34px}
-
 .frame{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow-x:auto}
 table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -85,20 +174,13 @@ th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mu
 tr:last-child td{border-bottom:0}
 tbody tr:hover td{background:color-mix(in srgb,var(--accent-soft) 35%,transparent)}
 table.sugg{min-width:1100px}
-table.sugg td.req{width:250px}
-table.sugg td.who{width:300px}
-table.sugg td.fit{width:120px}
-table.sugg td.dec{width:210px}
+table.sugg td.req{width:250px} table.sugg td.who{width:300px} table.sugg td.fit{width:120px} table.sugg td.dec{width:210px}
 .req .t{font-weight:600}
 .sub{display:inline-block;font-family:var(--f-mono);font-size:.78rem;font-weight:500;padding:0 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
 .arrow{color:var(--muted);margin:0 4px}
 .pill{display:inline-block;font-size:.72rem;font-weight:600;padding:1px 8px;border-radius:999px;letter-spacing:.02em;white-space:nowrap}
-.p-High{background:var(--bad-soft);color:var(--bad)}
-.p-Medium{background:var(--warn-soft);color:var(--warn)}
-.p-Low{background:var(--sunk);color:var(--muted)}
-.p-Approve{background:var(--good-soft);color:var(--good)}
-.p-Hold{background:var(--warn-soft);color:var(--warn)}
-.p-Reject{background:var(--bad-soft);color:var(--bad)}
+.p-High{background:var(--bad-soft);color:var(--bad)} .p-Medium{background:var(--warn-soft);color:var(--warn)} .p-Low{background:var(--sunk);color:var(--muted)}
+.p-Approve{background:var(--good-soft);color:var(--good)} .p-Hold{background:var(--warn-soft);color:var(--warn)} .p-Reject{background:var(--bad-soft);color:var(--bad)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chip{font-size:.76rem;padding:1px 8px;border-radius:5px;background:var(--sunk);border:1px solid var(--line);white-space:nowrap}
 .chip.good{background:var(--good-soft);color:var(--good);border-color:transparent}
@@ -120,20 +202,18 @@ table.sugg td.dec{width:210px}
 .seg button[aria-pressed="true"][data-v="Approve"]{background:var(--good);color:var(--surface)}
 .seg button[aria-pressed="true"][data-v="Hold"]{background:var(--warn);color:var(--surface)}
 .seg button[aria-pressed="true"][data-v="Reject"]{background:var(--bad);color:var(--surface)}
-
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 @media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .card p{margin:0}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card-h a{font-size:.85rem;color:var(--accent);text-decoration:none;font-weight:500}
 .kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;font-size:.9rem}
 .kv dt{color:var(--muted)} .kv dd{margin:0}
 .note{border-left:3px solid var(--ember);background:var(--surface);padding:10px 14px;border-radius:0 8px 8px 0;font-size:.9rem;color:var(--muted)}
 .note b{color:var(--ink)}
 .banner{padding:10px 14px;border-radius:8px;font-size:.9rem}
-.banner.bad{background:var(--bad-soft);color:var(--bad)}
-.banner.good{background:var(--good-soft);color:var(--good)}
-.banner.info{background:var(--accent-soft);color:var(--accent)}
-
+.banner.bad{background:var(--bad-soft);color:var(--bad)} .banner.good{background:var(--good-soft);color:var(--good)} .banner.info{background:var(--accent-soft);color:var(--accent)}
 .rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 20px}
 .rule{display:flex;flex-direction:column;gap:4px}
 .rule .hint{font-size:.78rem;color:var(--muted)}
@@ -146,60 +226,66 @@ table.sugg td.dec{width:210px}
 @media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
 .step{background:var(--sunk);border-radius:8px;padding:12px}
 .step .k{font-family:var(--f-mono);color:var(--ember);font-size:.8rem;font-weight:500}
-
 .flow td,.flow th{text-align:center;padding:8px;min-width:52px}
 .flow th:first-child,.flow td:first-child{text-align:left}
 .heat{font-family:var(--f-mono);font-variant-numeric:tabular-nums;border-radius:4px;padding:2px 0}
-
-.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 45%,transparent);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:50}
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,#000 45%,transparent);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:50}
 .modal{background:var(--surface);border-radius:12px;max-width:900px;width:100%;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid var(--line)}
 .modal textarea.out{width:100%;flex:1;min-height:260px;font:12px/1.45 var(--f-mono);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
-.modal.narrow{max-width:460px}
 .form{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 14px}
 .form input{width:100%}
-.login-ids{display:flex;flex-direction:column;gap:8px}
-.login-ids button{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 14px;cursor:pointer;min-height:48px}
-.login-ids button:hover{border-color:var(--accent)}
-.login-ids .id{font-family:var(--f-mono);font-weight:500}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:60}
 .err{color:var(--bad);font-size:.85rem}
-.drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
 .rank td{padding:8px 12px}
 @media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s ease}}
+
+/* ---- Sign-in page ---- */
+.signin{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:860px){.signin{grid-template-columns:minmax(0,1fr)}}
+.signin .pitch{background:var(--side);color:var(--side-ink);padding:48px max(32px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:18px;justify-content:center}
+.signin .pitch h1{font-size:2.1rem;color:#fff;max-width:18ch}
+:root[data-theme="dark"] .signin .pitch h1{color:var(--side-ink)}
+.signin .pitch p{margin:0;color:var(--side-muted);max-width:52ch}
+.signin .pitch ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;max-width:52ch}
+.signin .pitch li{display:flex;gap:10px;align-items:flex-start}
+.signin .pitch li svg{color:var(--ember);margin-top:2px}
+.signin .form-side{padding:40px max(24px,env(safe-area-inset-right,0px)) 40px 24px;display:flex;align-items:center;justify-content:center}
+.signin .box{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px}
+.login-ids{display:flex;flex-direction:column;gap:8px}
+.login-ids button{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:52px}
+.login-ids button:hover{border-color:var(--accent)}
+.login-ids .id{font-family:var(--f-mono);font-weight:500}
+.login-ids .grp{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;margin-top:6px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div>
-      <div class="label">Coal India Limited · Annual transfer cycle</div>
-      <h1>CIL Transfer Matching</h1>
-      <p>Matches executives to grade vacancies across subsidiaries by field of expertise, years in that field, grade seasoning and tenure. Rotates executives out of long-held sensitive posts and fills the remaining vacancies by promotion.</p>
+<div id="signin"></div>
+<div class="app" id="app" hidden>
+  <aside class="side" id="side" aria-label="Main menu">
+    <div class="brand"><div class="mark">CTM</div><div><b>CIL Transfer Matching</b><span id="cycleLbl">November transfer cycle</span></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <div class="theme-seg" role="group" aria-label="Colour theme" id="themeSeg"></div>
+      <div class="me" id="me"></div>
     </div>
-    <div class="cycle">
-      <span class="tag who-tag" id="whoTag"></span>
-      <button class="btn small" data-act="switch">Switch login</button>
-      <span class="tag">Cycle date <b id="cycleTag" class="num"></b></span>
-      <span class="tag" id="srcTag"></span>
-    </div>
-  </header>
-
-  <div class="kpis" id="kpis"></div>
-
-  <nav class="tabs" role="tablist" id="tabs">
-    <button role="tab" data-tab="suggestions">Posting suggestions</button>
-    <button role="tab" data-tab="rotation">Sensitive posts &amp; promotion</button>
-    <button role="tab" data-tab="employee">Employee view</button>
-    <button role="tab" data-tab="flow">Transfer flow</button>
-    <button role="tab" data-tab="rules">Rules &amp; weights</button>
-    <button role="tab" data-tab="data">Data</button>
-  </nav>
-
-  <main id="main"></main>
+  </aside>
+  <div class="scrim" data-act="closeNav"></div>
+  <div class="maincol">
+    <header class="topbar">
+      <button class="iconbtn" id="menuBtn" data-act="openNav" aria-label="Open menu"></button>
+      <div class="ttl"><div class="crumb" id="crumb"></div><h1 id="pageTitle"></h1></div>
+      <div class="right">
+        <span class="tag hide-sm">Cycle date <b id="cycleTag" class="num"></b></span>
+        <span class="tag hide-sm" id="srcTag"></span>
+        <button class="iconbtn" data-act="toggleTheme" id="themeBtn" aria-label="Switch light or dark mode"></button>
+      </div>
+    </header>
+    <main class="content" id="main"></main>
+  </div>
 </div>
 <div id="layer"></div>
-<div id="login"></div>
 
 <script>
 "use strict";
@@ -469,7 +555,7 @@ const tier=s=>s>=75?["strong","Strong"]:s>=60?["good","Good"]:["fair","Fair"];
 
 /* ---------------- State, login and permissions ---------------- */
 const LS="cil-transfer-matching-v2";
-let S; let F={sub:"",grade:"",disc:"",status:"",q:""}; let TAB="suggestions"; let EMP_SEL=""; let DATA_VIEW="emps"; let DATA_SCOPE="mine";
+let S; let F={sub:"",grade:"",disc:"",status:"",q:""}; let TAB="home"; let EMP_SEL=""; let DATA_VIEW="emps"; let DATA_SCOPE="mine"; let DASH_SUB="";
 function freshState(){const d=makeSample();return {emps:d.emps,vacs:d.vacs,rules:structuredClone(DEFAULT_RULES),overrides:{},decisions:{},updates:{},src:{emps:"Sample data",vacs:"Sample data"},role:""}}
 function load(){try{const t=localStorage.getItem(LS);if(t){const o=JSON.parse(t);if(o&&Array.isArray(o.emps)&&Array.isArray(o.vacs)){o.rules={...structuredClone(DEFAULT_RULES),...o.rules,w:{...DEFAULT_RULES.w,...(o.rules||{}).w}};o.updates=o.updates||{};o.overrides=o.overrides||{};o.decisions=o.decisions||{};return o}}}catch(e){}return freshState()}
 function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
@@ -481,47 +567,219 @@ const canEditRow=o=>normSub(o.Subsidiary)===S.role;
 function decOf(sid){let d=S.decisions[sid];if(!d)return null;if(typeof d==="string")d={v:d};const f=C.final[sid]||null;if(d.emp!==undefined&&d.emp!==f)return {...d,stale:true};return d}
 function markUpdate(what){S.updates[S.role]={at:new Date().toISOString().slice(0,16).replace("T"," "),by:loginOf(S.role).id,what}}
 
+/* ---------------- Icons ---------------- */
+const IC={
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  dash:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  swap:'<path d="M4 7h14l-3-3M20 17H6l3 3"/>',
+  shield:'<path d="M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  users:'<circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1"/><path d="M17 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/>',
+  flow:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 15.5V9a3 3 0 0 1 3-3h6.5M18 8.5V15a3 3 0 0 1-3 3H8.5"/>',
+  data:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  rules:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+  auto:'<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+  out:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>',
+  chev:'<path d="m9 6 6 6-6 6"/>',
+  check:'<path d="m5 12 5 5 9-10"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'
+};
+const icon=(n,cls="i")=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+
 /* ---------------- Rendering helpers ---------------- */
 const h=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=sel=>document.querySelector(sel);
 const subTag=s=>`<span class="sub" title="${h((SUBS[s]||{}).name||s)}">${h(s)}</span>`;
 const chips=why=>`<div class="chips">${why.map(([c,t])=>`<span class="chip ${c}">${h(t)}</span>`).join("")}</div>`;
 function scoreCell(sc){const [t,l]=tier(sc);return `<div class="score"><span class="n">${Math.round(sc)}<small>${l}</small></span><div class="bar"><i class="t-${t}" style="width:${Math.max(3,Math.min(100,sc))}%"></i></div></div>`}
-function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
+function toast(msg){const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
 function opts(list,val,all){return `<option value="">${h(all)}</option>`+list.map(x=>`<option value="${h(x)}"${x===val?" selected":""}>${h(x)}</option>`).join("")}
 const uniq=a=>[...new Set(a)].filter(Boolean);
 const sortSubs=a=>a.sort((x,y)=>{const i=SUB_ORDER.indexOf(x),j=SUB_ORDER.indexOf(y);return (i<0?99:i)-(j<0?99:j)||x.localeCompare(y)});
 const sortGrades=a=>a.sort((x,y)=>gnum(x)-gnum(y));
 const kindOf=(s,e)=>e&&e.grade!==s.grade?"Promotion":"Transfer";
 
-function renderAll(){if(!S.role){renderLogin();return}$("#login").innerHTML="";compute();renderHeader();renderKpis();renderTab();save()}
-function renderLogin(){
-  $("#login").innerHTML=`<div class="overlay"><div class="modal narrow" role="dialog" aria-modal="true" aria-labelledby="loginH">
-    <div><div class="label">CIL Transfer Matching</div><h2 id="loginH">Sign in</h2></div>
-    <p class="muted" style="margin:0;font-size:.9rem">Choose your office's login ID. Subsidiary HQs update their own employees and vacancies. CIL HQ reviews and approves postings.</p>
-    <div class="login-ids">${LOGINS.map(l=>`<button data-act="login" data-role="${h(l.role)}"><span><span class="id">${h(l.id)}</span><br><span class="muted" style="font-size:.85rem">${h(l.label)}</span></span><span class="pill ${l.role==="CIL HQ"?"p-Approve":"p-Low"}">${h(l.power)}</span></button>`).join("")}</div>
-    <p class="muted" style="margin:0;font-size:.8rem">Demo sign-in with no password: anyone can choose any login ID. Data stays in this browser.</p>
-  </div></div>`;
-  const b=$("#login button");if(b)b.focus();
+/* ---------------- Pages & navigation ---------------- */
+const PAGES=[
+  {id:"home",label:"Home",icon:"home",group:"Overview",title:"Home"},
+  {id:"dashboard",label:"Dashboard",icon:"dash",group:"Overview",title:"Dashboard"},
+  {id:"suggestions",label:"Posting suggestions",icon:"swap",group:"Transfer cycle",title:"Posting suggestions"},
+  {id:"rotation",label:"Sensitive & promotion",icon:"shield",group:"Transfer cycle",title:"Sensitive posts & promotion"},
+  {id:"employee",label:"Employees",icon:"users",group:"Transfer cycle",title:"Employee view"},
+  {id:"flow",label:"Transfer flow",icon:"flow",group:"Transfer cycle",title:"Transfer flow"},
+  {id:"data",label:"Data",icon:"data",group:"Setup",title:"Employee & vacancy data"},
+  {id:"rules",label:"Rules",icon:"rules",group:"Setup",title:"Rules & weights"}
+];
+const pageOf=id=>PAGES.find(p=>p.id===id)||PAGES[0];
+function go(tab,status){TAB=pageOf(tab).id;if(status!==undefined)F={sub:"",grade:"",disc:"",status,q:""};document.body.classList.remove("nav-open");
+  if(location.hash!=="#"+TAB){try{history.pushState(null,"","#"+TAB)}catch(e){}}renderShell();renderTab();$("#main").focus?.();window.scrollTo(0,0)}
+
+/* ---------------- Theme ---------------- */
+const TKEY="ctm-theme";
+let THEME_MEM="auto";
+const themePref=()=>{try{return localStorage.getItem(TKEY)||THEME_MEM}catch(e){return THEME_MEM}};
+const isDark=()=>{const a=document.documentElement.getAttribute("data-theme");return a?a==="dark":matchMedia("(prefers-color-scheme: dark)").matches};
+function setTheme(t){THEME_MEM=t;try{localStorage.setItem(TKEY,t)}catch(e){}if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);
+  renderThemeControls();if(S&&S.role&&TAB==="dashboard")renderDash()}
+function renderThemeControls(){const p=themePref();
+  const seg=$("#themeSeg");if(seg)seg.innerHTML=[["light","sun","Light"],["dark","moon","Dark"],["auto","auto","Auto"]].map(([v,ic,l])=>`<button data-act="theme" data-v="${v}" aria-pressed="${p===v}" title="${l} mode">${icon(ic)}<span>${l}</span></button>`).join("");
+  const b=$("#themeBtn");if(b)b.innerHTML=icon(isDark()?"sun":"moon");}
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{renderThemeControls();if(themePref()==="auto"&&S&&S.role&&TAB==="dashboard")renderDash()})}catch(e){}
+
+/* ---------------- Shell ---------------- */
+function renderAll(){
+  if(!S.role){$("#app").hidden=true;renderLogin();return}
+  $("#signin").innerHTML="";$("#app").hidden=false;compute();renderShell();renderTab();save();
 }
-function renderHeader(){
-  const l=loginOf(S.role);$("#whoTag").innerHTML=`Signed in: <b>${h(l.id)}</b> · ${h(l.label)} (${h(l.power)})`;
+function badges(){
+  const b={};
+  if(isCIL()){b.suggestions=C.seats.filter(s=>C.final[s.id]&&!(decOf(s.id)&&!decOf(s.id).stale)).length}
+  const fl=C.emps.filter(e=>myEmp(e)&&e.flag&&!C.seatOf[e.id]).length; if(fl)b.rotation=fl;
+  return b;
+}
+function renderShell(){
+  const l=loginOf(S.role), p=pageOf(TAB), b=badges();
+  let html="",grp="";
+  PAGES.forEach(pg=>{if(pg.group!==grp){if(grp)html+="</div>";grp=pg.group;html+=`<div class="nav-group"><div class="gl">${h(grp)}</div>`}
+    html+=`<a href="#${pg.id}" data-act="nav" data-tab="${pg.id}"${pg.id===TAB?' aria-current="page"':""}>${icon(pg.icon)}<span>${h(pg.label)}</span>${b[pg.id]?`<span class="cnt${pg.id==="suggestions"?" soft":""}" title="${pg.id==="suggestions"?"Awaiting decision":"Not yet moved"}">${b[pg.id]}</span>`:""}</a>`});
+  $("#nav").innerHTML=html+"</div>";
+  $("#me").innerHTML=`<div class="av">${h(l.label.split(" ")[0].slice(0,4))}</div><div class="t"><b>${h(l.id)}</b><span>${h(l.label)} · ${h(l.power)}</span></div><button data-act="switch" title="Switch login" aria-label="Switch login">${icon("out")}</button>`;
+  $("#menuBtn").innerHTML=icon("menu");
+  $("#crumb").textContent=p.group;$("#pageTitle").textContent=p.title;document.title=p.title+" · CIL Transfer Matching";
   $("#cycleTag").textContent=new Date(C.cyc).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"});
-  const sample=S.src.emps==="Sample data"&&S.src.vacs==="Sample data";$("#srcTag").innerHTML=sample?"<b>Sample data</b> (fictional)":`Employees: <b>${h(S.src.emps)}</b> · Needs: <b>${h(S.src.vacs)}</b>`;
-  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===TAB));
+  $("#cycleLbl").textContent=new Date(C.cyc).toLocaleDateString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"})+" transfer cycle";
+  const sample=S.src.emps==="Sample data"&&S.src.vacs==="Sample data";$("#srcTag").innerHTML=sample?"<b>Sample data</b> (fictional)":`Data: <b>${h(S.src.emps)}</b>`;
+  renderThemeControls();
 }
-function renderKpis(){
-  const seats=C.seats.filter(s=>isCIL()||s.sub===S.role), emps=C.emps.filter(myEmp);
+function renderLogin(){
+  const grp=(t,list)=>`<div class="grp">${t}</div>`+list.map(l=>`<button data-act="login" data-role="${h(l.role)}"><span><span class="id">${h(l.id)}</span><br><span class="muted" style="font-size:.85rem">${h(l.role==="CIL HQ"?"CIL Headquarters, Kolkata":(SUBS[l.role]||{}).name||l.label)}</span></span><span class="pill ${l.role==="CIL HQ"?"p-Approve":"p-Low"}">${h(l.power)}</span></button>`).join("");
+  $("#signin").innerHTML=`<div class="signin">
+   <div class="pitch"><div class="brand" style="padding:0"><div class="mark">CTM</div><div><b>CIL Transfer Matching</b><span>Coal India Limited</span></div></div>
+     <h1>Right executive, right post, every November.</h1>
+     <p>Transfers based on what each executive has actually done, matched to what each subsidiary actually needs.</p>
+     <ul><li>${icon("check")}<span>Matches field of expertise and years of experience to grade vacancies across all subsidiaries.</span></li>
+       <li>${icon("check")}<span>Rotates executives who have held a sensitive post for more than three years.</span></li>
+       <li>${icon("check")}<span>Fills the remaining vacancies by promotion, with every suggestion explained for CIL HQ.</span></li></ul></div>
+   <div class="form-side"><div class="box"><div><h2>Sign in</h2><p class="muted" style="margin:4px 0 0;font-size:.92rem">Choose your office's login ID.</p></div>
+     <div class="login-ids">${grp("Review &amp; approval",LOGINS.filter(l=>l.role==="CIL HQ"))}${grp("Subsidiary HQs · updation",LOGINS.filter(l=>l.role!=="CIL HQ"))}</div>
+     <p class="muted" style="margin:0;font-size:.8rem">Demo sign-in with no password: anyone can choose any login ID. Data stays in this browser.</p>
+     <div class="theme-seg" role="group" aria-label="Colour theme" id="themeSeg" style="background:var(--sunk)"></div></div></div></div>`;
+  renderThemeControls();document.querySelectorAll("#themeSeg button").forEach(b=>{b.style.color="var(--ink)"});
+}
+function renderTab(){({home:renderHome,dashboard:renderDash,suggestions:renderSugg,rotation:renderRotation,employee:renderEmp,flow:renderFlow,rules:renderRules,data:renderData})[TAB]()}
+
+/* ----- Shared numbers ----- */
+function stats(sub){
+  const seats=C.seats.filter(s=>sub?s.sub===sub:(isCIL()||s.sub===S.role)), emps=C.emps.filter(e=>sub?e.sub===sub:myEmp(e));
   const filled=seats.filter(s=>C.final[s.id]);
-  const promos=filled.filter(s=>kindOf(s,C.empById.get(C.final[s.id]))==="Promotion").length;
-  const scores=filled.map(s=>(pairFor(s.id,C.final[s.id])||{score:0}).score); const avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;
-  const flagged=emps.filter(e=>e.flag), moved=flagged.filter(e=>C.seatOf[e.id]).length;
-  const appr=seats.filter(s=>{const d=decOf(s.id);return d&&!d.stale&&d.v==="Approve"}).length;
-  const scope=isCIL()?"all subsidiaries":S.role;
-  const k=[["Seats to fill",seats.length,`Vacancies in ${scope}`],["Transfers suggested",filled.length-promos,filled.length?`Average fit ${Math.round(avg)} / 100`:"—"],["Filled by promotion",promos,`Min ${C.R.promoYears} yrs in lower grade`],["Still vacant",seats.length-filled.length,"Needs recruitment",seats.length-filled.length>0],[`Sensitive post > ${C.R.sensitiveYears} yrs`,flagged.length,`${moved} given a move this cycle`,flagged.length-moved>0],["Approved",appr,`of ${filled.length} suggested postings`]];
-  $("#kpis").innerHTML=k.map(([l,v,s,a])=>`<div class="kpi${a?" alert":""}"><div class="label">${h(l)}</div><div class="v">${v}</div><div class="s">${h(s)}</div></div>`).join("");
+  const promos=filled.filter(s=>kindOf(s,C.empById.get(C.final[s.id]))==="Promotion");
+  const scores=filled.map(s=>(pairFor(s.id,C.final[s.id])||{score:0}).score);
+  const flagged=emps.filter(e=>e.flag), moved=flagged.filter(e=>C.seatOf[e.id]);
+  const dec={Approve:0,Hold:0,Reject:0,Pending:0}; filled.forEach(s=>{const d=decOf(s.id);dec[d&&!d.stale?d.v:"Pending"]++});
+  return {seats,emps,filled,promos,scores,avg:scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0,flagged,moved,dec};
 }
-function renderTab(){({suggestions:renderSugg,rotation:renderRotation,employee:renderEmp,flow:renderFlow,rules:renderRules,data:renderData})[TAB]()}
+
+/* ----- Home ----- */
+function renderHome(){
+  const l=loginOf(S.role), st=stats(), hr=new Date().getHours(), greet=hr<12?"Good morning":hr<17?"Good afternoon":"Good evening", R=C.R;
+  const tasks=[];
+  if(isCIL()){
+    if(st.dec.Pending)tasks.push(["warn",st.dec.Pending,"Postings awaiting your decision","Approve, hold or reject each suggested posting.","suggestions","pending"]);
+    const conf=Object.values(C.count).filter(c=>c>1).length; if(conf)tasks.push(["bad",conf,"Executives posted to two seats","Caused by manual changes. Pick one seat for each.","suggestions","conflict"]);
+    const fl=st.flagged.length-st.moved.length; if(fl)tasks.push(["bad",fl,`Sensitive posts held over ${R.sensitiveYears} years, no move found`,"Decide on rotation within their subsidiary.","rotation"]);
+    const vac=st.seats.length-st.filled.length; if(vac)tasks.push(["info",vac,"Seats with no suitable candidate","Consider recruitment or relaxing minimum years.","suggestions","unfilled"]);
+    const notUpd=SUB_ORDER.filter(s=>s!=="CIL HQ"&&!S.updates[s]).length; if(notUpd)tasks.push(["info",notUpd,"Subsidiaries yet to update data this cycle","See the update status on the Data page.","data"]);
+  } else {
+    const me=S.role, upd=S.updates[me];
+    if(!upd)tasks.push(["warn","!",`Update ${me}'s employee data`,"Upload the HRMS export or edit rows on the Data page.","data"]);
+    const noSens=st.emps.filter(e=>!String(e.SensitivePost||"").trim()).length; if(noSens)tasks.push(["warn",noSens,"Executives without sensitive-post status","Mark each as Yes or No so rotation is correct.","data"]);
+    const gaps=st.emps.filter(e=>!e.PostingSince||!e.DateOfBirth||!e.exp.some(x=>x.years>0)).length; if(gaps)tasks.push(["bad",gaps,"Employee records with missing details","Posting date, date of birth or years of expertise missing.","data"]);
+    const vl=S.vacs.filter(v=>normSub(v.Subsidiary)===me).length; tasks.push([vl?"good":"warn",vl,vl?`Vacancy lines entered for ${me}`:`No vacancies entered for ${me}`,"Add this cycle's requirements on the Data page.","data"]);
+    const out=C.emps.filter(e=>e.sub===me&&C.seatOf[e.id]&&C.seatOf[e.id].sub!==me).length; if(out)tasks.push(["info",out,`${me} executives proposed to move out`,"Plan relief and handover for these officers.","suggestions"]);
+  }
+  const decided=st.filled.length-st.dec.Pending, updCount=SUB_ORDER.filter(s=>s!=="CIL HQ"&&S.updates[s]).length;
+  const stage=(cls,n,t,s)=>`<div class="stage ${cls}"><div class="sn">${cls==="done"?"Done":cls==="now"?"In progress":"Step "+n}</div><b>${t}</b><span>${s}</span></div>`;
+  const quick=(isCIL()?[["suggestions","swap","Review postings","Approve or change suggestions"],["dashboard","dash","Dashboard","Cycle at a glance"],["rotation","shield","Sensitive & promotion","Rotation and promotions"],["rules","rules","Rules","Tenure, weights, limits"]]
+    :[["data","upload","Update data","Employees and vacancies"],["suggestions","swap","Our postings","Seats and moves for "+S.role],["employee","users","Employee lookup","Profile and options"],["dashboard","dash","Dashboard",S.role+" at a glance"]]);
+  $("#main").innerHTML=`<section class="panel">
+   <div class="hello"><div><h1>${greet}, ${h(l.label)}</h1><p>${isCIL()?"You review and approve postings for all subsidiaries.":"You update "+h(S.role)+"'s employees and vacancies. CIL HQ reviews and approves postings."}</p></div>
+     <span class="tag"><b>${new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}</b></span></div>
+   <div class="card"><div class="card-h"><h2>Transfer cycle progress</h2></div>
+     <div class="stages">
+      ${stage(updCount>=SUB_ORDER.length-1?"done":"now",1,"Subsidiaries update data",`${updCount} of ${SUB_ORDER.length-1} updated this cycle`)}
+      ${stage("done",2,"Tool suggests postings",`${C.seats.filter(s=>C.final[s.id]).length} of ${C.seats.length} seats matched`)}
+      ${stage(decided===0?"":decided<C.seats.filter(s=>C.final[s.id]).length?"now":"done",3,"CIL HQ reviews",`${C.seats.filter(s=>{const d=decOf(s.id);return d&&!d.stale}).length} decisions recorded`)}
+      ${stage(decided>0&&st.dec.Pending===0&&isCIL()?"done":"",4,"Orders issued","Copy the decision sheet into the office order")}
+     </div></div>
+   <div class="home-grid">
+    <div class="card"><div class="card-h"><h2>Awaiting your action</h2>${tasks.length?`<span class="muted" style="font-size:.85rem">${tasks.length} item${tasks.length>1?"s":""}</span>`:""}</div>
+      <div class="tasks">${tasks.length?tasks.map(([tone,n,t,s,tab,stt])=>`<button class="task" data-act="go" data-tab="${tab}"${stt?` data-status="${stt}"`:""}><span class="n ${tone}">${n}</span><span><span class="tt">${h(t)}</span><br><span class="ts">${h(s)}</span></span><span class="go">${icon("chev")}</span></button>`).join(""):`<p class="muted">Nothing waiting. All caught up.</p>`}</div></div>
+    <div class="card"><h2>Transfer policy this cycle</h2>
+      <ul class="policy">
+        <li>Transfer after at least <b>${R.minTenure} years</b> at the present posting.</li>
+        <li>Matched by <b>field of expertise</b> and years in it; ${R.sameDiscipline?"same discipline only":"any discipline"}.</li>
+        <li>Sensitive posts (bill payment, tendering, stores, cash, sales) rotate after <b>${R.sensitiveYears} years</b>.</li>
+        <li>Promotion after <b>${R.promoYears} years</b> in grade, only against a vacancy.</li>
+        <li>No transfer within <b>${R.retireBuffer} years</b> of superannuation at ${R.retireAge}.</li>
+        ${R.honorExempt?"<li>Recorded exemptions (spouse posting, medical) are respected.</li>":""}
+      </ul>
+      <a class="btn small" href="#rules" data-act="nav" data-tab="rules" style="align-self:flex-start">See all rules</a></div>
+   </div>
+   <div><h2 style="margin-bottom:10px">Quick links</h2><div class="quick">${quick.map(([t,ic,b,s])=>`<a class="qa" href="#${t}" data-act="nav" data-tab="${t}"><span class="ic">${icon(ic)}</span><b>${h(b)}</b><span>${h(s)}</span></a>`).join("")}</div></div>
+  </section>`;
+}
+
+/* ----- Dashboard ----- */
+let CHARTS=[];
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function renderDash(){
+  CHARTS.forEach(c=>{try{c.destroy()}catch(e){}});CHARTS=[];
+  const sub=isCIL()?DASH_SUB:"", st=stats(sub||undefined), R=C.R;
+  const k=[["Seats to fill",st.seats.length,sub?`Vacancies in ${sub}`:isCIL()?"All subsidiaries":"Vacancies in "+S.role],["Transfers suggested",st.filled.length-st.promos.length,st.filled.length?`Average fit ${Math.round(st.avg)} / 100`:"—"],["Filled by promotion",st.promos.length,`Min ${R.promoYears} yrs in lower grade`],["Still vacant",st.seats.length-st.filled.length,"Needs recruitment",st.seats.length-st.filled.length>0],[`Sensitive > ${R.sensitiveYears} yrs`,st.flagged.length,`${st.moved.length} given a move`,st.flagged.length-st.moved.length>0],["Approved",st.dec.Approve,`of ${st.filled.length} suggested`]];
+  const subs=sortSubs(uniq(C.seats.map(s=>s.sub).concat(C.emps.map(e=>e.sub)))).filter(s=>!sub||s===sub).filter(s=>isCIL()||s===S.role);
+  const bySub=subs.map(s=>{const seats=st.seats.filter(x=>x.sub===s);const f=seats.filter(x=>C.final[x.id]);const p=f.filter(x=>kindOf(x,C.empById.get(C.final[x.id]))==="Promotion").length;const fl=st.flagged.filter(e=>e.sub===s);return {s,t:f.length-p,p,v:seats.length-f.length,fm:fl.filter(e=>C.seatOf[e.id]).length,fn:fl.filter(e=>!C.seatOf[e.id]).length}});
+  const tiers=[["Strong (75+)",st.scores.filter(x=>x>=75).length],["Good (60–74)",st.scores.filter(x=>x>=60&&x<75).length],["Fair (below 60)",st.scores.filter(x=>x<60).length]];
+  const fields={};st.seats.forEach(s=>{const f=fields[s.field]||(fields[s.field]={n:0,f:0});f.n++;if(C.final[s.id])f.f++});
+  const fRows=Object.entries(fields).sort((a,b)=>(b[1].n-b[1].f)-(a[1].n-a[1].f)||b[1].n-a[1].n).slice(0,8);
+  const D=st.dec, tot=st.filled.length||1;
+  const tbl=(head,rows)=>`<details><summary>Show as table</summary><div class="frame" style="margin-top:8px"><table><thead><tr>${head.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="num"':""}>${h(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+  const barH=Math.max(160,bySub.length*34+60);
+  $("#main").innerHTML=`<section class="panel">
+   <div class="toolbar">${isCIL()?`<select id="dashSub" aria-label="Subsidiary">${opts(sortSubs(uniq(C.seats.map(s=>s.sub).concat(C.emps.map(e=>e.sub)))),DASH_SUB,"All subsidiaries")}</select>`:`<span class="tag">Showing <b>${h(S.role)}</b></span>`}<span class="grow"></span><button class="btn small" data-act="export">${icon("upload")}Decision sheet</button></div>
+   <div class="kpis">${k.map(([l,v,s,a])=>`<div class="kpi${a?" alert":""}"><div class="label">${h(l)}</div><div class="v">${v}</div><div class="s">${h(s)}</div></div>`).join("")}</div>
+   <div class="card"><div class="card-h"><h3>Decision progress</h3><a href="#suggestions" data-act="go" data-tab="suggestions" data-status="pending">Review pending</a></div>
+     <div class="meter" role="img" aria-label="Approved ${D.Approve}, on hold ${D.Hold}, rejected ${D.Reject}, pending ${D.Pending}">${[["Approve","--st-good"],["Hold","--st-warn"],["Reject","--st-crit"],["Pending","--st-none"]].map(([k2,c])=>D[k2]?`<i style="width:${100*D[k2]/tot}%;background:var(${c})"></i>`:"").join("")}</div>
+     <div class="legend"><span><i style="background:var(--st-good)"></i>Approved ${D.Approve}</span><span><i style="background:var(--st-warn)"></i>On hold ${D.Hold}</span><span><i style="background:var(--st-crit)"></i>Rejected ${D.Reject}</span><span><i style="background:var(--st-none)"></i>Pending ${D.Pending}</span></div></div>
+   <div class="charts">
+    <div class="card chart-card"><div class="card-h"><h3>Seats by subsidiary</h3><a href="#suggestions" data-act="nav" data-tab="suggestions">Open postings</a></div><div class="cv" style="height:${barH}px"><canvas id="chSeats" aria-label="Seats by subsidiary: filled by transfer, by promotion, still vacant"></canvas></div>
+      ${tbl(["Subsidiary","Transfer","Promotion","Vacant"],bySub.map(r=>[r.s,r.t,r.p,r.v]))}</div>
+    <div class="card chart-card"><div class="card-h"><h3>Sensitive posts over ${R.sensitiveYears} years</h3><a href="#rotation" data-act="nav" data-tab="rotation">Open list</a></div><div class="cv" style="height:${barH}px"><canvas id="chSens" aria-label="Sensitive-post holders by subsidiary: given a move or not"></canvas></div>
+      ${tbl(["Subsidiary","Given a move","Not moved"],bySub.map(r=>[r.s,r.fm,r.fn]))}</div>
+    <div class="card chart-card"><div class="card-h"><h3>Quality of suggested matches</h3></div><div class="cv" style="height:220px"><canvas id="chFit" aria-label="Suggested postings by fit score band"></canvas></div>
+      ${tbl(["Fit band","Postings"],tiers)}</div>
+    <div class="card"><div class="card-h"><h3>Expertise most in demand</h3></div>
+      <div class="frame" style="border:0"><table><thead><tr><th>Field</th><th>Seats</th><th>Filled</th><th>Gap</th></tr></thead><tbody>
+      ${fRows.map(([f,v])=>`<tr><td>${h(f)}</td><td class="num">${v.n}</td><td class="num">${v.f}</td><td class="num"${v.n-v.f?" style='color:var(--bad);font-weight:600'":""}>${v.n-v.f}</td></tr>`).join("")||`<tr><td colspan="4" class="muted">No vacancies.</td></tr>`}</tbody></table></div>
+      <p class="muted" style="font-size:.82rem">A gap means no internal executive fits. Plan recruitment or training in that field.</p></div>
+   </div>
+   <p id="chartErr" class="err"></p>
+  </section>`;
+  if(!window.Chart){$("#chartErr").textContent="Charts could not load (Chart.js did not download). The tables under each chart still show the numbers. Error: window.Chart is not defined.";document.querySelectorAll(".chart-card details").forEach(d=>d.open=true);return}
+  try{
+    const ink=cssv("--ink"),muted=cssv("--muted"),line=cssv("--line"),surf=cssv("--surface"),s1=cssv("--s1"),s2=cssv("--s2"),neu=cssv("--s-neutral");
+    Chart.defaults.font.family=cssv("--f-body");Chart.defaults.color=muted;
+    const base=(stacked,horizontal)=>({responsive:true,maintainAspectRatio:false,indexAxis:horizontal?"y":"x",animation:matchMedia("(prefers-reduced-motion: reduce)").matches?false:{duration:300},
+      plugins:{legend:{position:"top",align:"start",labels:{boxWidth:10,boxHeight:10,useBorderRadius:true,borderRadius:3,color:ink}},tooltip:{backgroundColor:ink,titleColor:surf,bodyColor:surf,padding:10,cornerRadius:6}},
+      scales:{x:{stacked,grid:{color:horizontal?line:"transparent",drawTicks:false},border:{color:line},ticks:{color:muted,precision:0,padding:6}},y:{stacked,grid:{color:horizontal?"transparent":line,drawTicks:false},border:{color:line},ticks:{color:horizontal?ink:muted,precision:0,padding:6}}}});
+    const ds=(label,data,color)=>({label,data,backgroundColor:color,borderColor:surf,borderWidth:{right:2,left:0,top:0,bottom:0},borderRadius:4,borderSkipped:false,barThickness:16});
+    CHARTS.push(new Chart($("#chSeats"),{type:"bar",data:{labels:bySub.map(r=>r.s),datasets:[ds("By transfer",bySub.map(r=>r.t),s1),ds("By promotion",bySub.map(r=>r.p),s2),ds("Still vacant",bySub.map(r=>r.v),neu)]},options:base(true,true)}));
+    CHARTS.push(new Chart($("#chSens"),{type:"bar",data:{labels:bySub.map(r=>r.s),datasets:[ds("Given a move",bySub.map(r=>r.fm),s1),ds("Not moved",bySub.map(r=>r.fn),s2)]},options:base(true,true)}));
+    const fo=base(false,false);fo.plugins.legend.display=false;
+    CHARTS.push(new Chart($("#chFit"),{type:"bar",data:{labels:tiers.map(t=>t[0]),datasets:[{label:"Postings",data:tiers.map(t=>t[1]),backgroundColor:s1,borderRadius:4,borderSkipped:"start",barThickness:40}]},options:fo}));
+  }catch(err){$("#chartErr").textContent="Charts could not be drawn. The tables under each chart still show the numbers. Error: "+err.message}
+}
 
 /* ----- Suggestions ----- */
 function renderSugg(){
@@ -532,13 +790,13 @@ function renderSugg(){
     if(F.sub&&s.sub!==F.sub)return false;if(F.grade&&s.grade!==F.grade)return false;if(F.disc&&s.disc!==F.disc)return false;
     const id=C.final[s.id], e=id&&C.empById.get(id), d=decOf(s.id);
     if(F.status==="unfilled"&&id)return false; if(F.status==="filled"&&!id)return false; if(F.status==="conflict"&&!(id&&C.count[id]>1))return false;
-    if(F.status==="pending"&&d&&!d.stale)return false; if(F.status==="manual"&&S.overrides[s.id]===undefined)return false;
+    if(F.status==="pending"&&(!id||(d&&!d.stale)))return false; if(F.status==="manual"&&S.overrides[s.id]===undefined)return false;
     if(F.status==="promotion"&&!(e&&e.grade!==s.grade))return false; if(F.status==="sensitive"&&!(e&&e.flag))return false;
     if(q){const hay=[s.id,s.sub,s.unit,s.dept,s.field,s.disc,e&&e.Name,e&&e.id,e&&e.sub].join(" ").toLowerCase();if(!hay.includes(q))return false}
     return true});
   const conflicts=Object.values(C.count).filter(c=>c>1).length;
   $("#main").innerHTML=`<section class="panel">
-   ${isCIL()?"":`<div class="banner info">View only. These are the seats in ${h(S.role)} and the ${h(S.role)} executives suggested for other seats. CIL HQ reviews and approves. You can update ${h(S.role)}'s employees and vacancies on the Data tab.</div>`}
+   ${isCIL()?"":`<div class="banner info">View only. These are the seats in ${h(S.role)} and the ${h(S.role)} executives suggested for other seats. CIL HQ reviews and approves. You can update ${h(S.role)}'s employees and vacancies on the Data page.</div>`}
    ${conflicts&&isCIL()?`<div class="banner bad">${conflicts} executive${conflicts>1?"s are":" is"} posted to more than one seat after manual changes. Filter by “Conflicts” to resolve.</div>`:""}
    <div class="toolbar">
      <div class="grow"><input type="search" id="fq" placeholder="Search name, EIS no., unit, expertise…" value="${h(F.q)}" aria-label="Search"></div>
@@ -590,7 +848,6 @@ function renderRotation(){
   const fRows=flagged.map(e=>{const s=C.seatOf[e.id];const bl=C.eb.get(e.id);
     const status=s?`<span class="chip good">Suggested: ${h(s.id)} ${h(s.sub)} ${h(s.unit)}</span>`:bl.length?`<span class="chip bad">${h(bl[0])}</span>`:`<span class="chip warn">No matching vacancy elsewhere</span><div class="muted" style="font-size:.8rem;margin-top:4px">Rotate to a non-sensitive desk within ${h(e.sub)}.</div>`;
     return `<tr><td><b>${h(e.Name)}</b><div class="mono muted" style="font-size:.8rem">${h(e.id)}</div></td><td>${subTag(e.sub)} ${h(e.Unit)}<div class="muted" style="font-size:.82rem">${h(e.grade)} · ${h(e.Department)}</div></td><td>${h(e.sensDesc)}</td><td class="num" style="color:var(--bad);font-weight:600">${fmtY(e.sensYears)}</td><td>${status}</td></tr>`}).join("");
-  // Promotion: per grade, vacancies left after transfers versus executives eligible from the grade below.
   const scopeSeats=C.seats.filter(s=>isCIL()||s.sub===S.role);
   const grades=sortGrades(uniq(C.seats.map(s=>s.grade)));
   const gRows=grades.map(g=>{const st=scopeSeats.filter(s=>s.grade===g);if(!st.length)return "";const lower="E"+(gnum(g)-1);
@@ -601,12 +858,11 @@ function renderRotation(){
   const promoted=emps.filter(e=>{const s=C.seatOf[e.id];return s&&s.grade!==e.grade});
   const waiting=emps.filter(e=>e.yGrade>=R.promoYears&&!C.seatOf[e.id]&&gnum(e.grade)<9).sort((a,b)=>b.yGrade-a.yGrade);
   $("#main").innerHTML=`<section class="panel">
-   <div class="note"><b>Sensitive posts.</b> Executives handling vendor bill payments, tendering, stores, cash, coal sales or allotments for more than ${R.sensitiveYears} years are flagged. ${R.sensitiveFirst?"They are placed first when vacancies are matched.":"Priority placement is switched off on the Rules tab."} Mark a post sensitive in the employee data (SensitivePost column).</div>
+   <div class="note"><b>Sensitive posts.</b> Executives handling vendor bill payments, tendering, stores, cash, coal sales or allotments for more than ${R.sensitiveYears} years are flagged. ${R.sensitiveFirst?"They are placed first when vacancies are matched.":"Priority placement is switched off on the Rules page."} Mark a post sensitive in the employee data (SensitivePost column).</div>
    <h2>Sensitive post held more than ${R.sensitiveYears} years <span class="muted" style="font-weight:500">(${flagged.length})</span></h2>
    <div class="frame"><table style="min-width:820px"><thead><tr><th>Executive</th><th>Present posting</th><th>Sensitive work</th><th>Years in post</th><th>This cycle</th></tr></thead><tbody>
     ${fRows||`<tr><td colspan="5" class="muted">No executive has held a sensitive post for more than ${R.sensitiveYears} years.</td></tr>`}</tbody></table></div>
-
-   <div class="note"><b>Promotion.</b> An executive is eligible for the next grade after at least ${R.promoYears} years in the present grade, and only against a vacancy. ${R.promotion?"Vacancies not filled by transfer are offered to eligible executives, best fit first.":"Filling by promotion is switched off on the Rules tab."}</div>
+   <div class="note"><b>Promotion.</b> An executive is eligible for the next grade after at least ${R.promoYears} years in the present grade, and only against a vacancy. ${R.promotion?"Vacancies not filled by transfer are offered to eligible executives, best fit first.":"Filling by promotion is switched off on the Rules page."}</div>
    <h2>Promotion against vacancies</h2>
    <div class="frame"><table style="min-width:680px"><thead><tr><th>Grade</th><th>Seats</th><th>Not filled by transfer</th><th>Eligible (${R.promoYears}+ yrs below)</th><th>Filled by promotion</th><th>Still vacant</th></tr></thead><tbody>
     ${gRows||`<tr><td colspan="6" class="muted">No vacancies loaded.</td></tr>`}</tbody></table></div>
@@ -653,7 +909,7 @@ function renderEmp(){
 
 /* ----- Flow ----- */
 function renderFlow(){
-  const moves=C.seats.filter(s=>C.final[s.id]).map(s=>({from:C.empById.get(C.final[s.id]).sub,to:s.sub,promo:kindOf(s,C.empById.get(C.final[s.id]))==="Promotion"})).filter(m=>m.from!==m.to);
+  const moves=C.seats.filter(s=>C.final[s.id]).map(s=>({from:C.empById.get(C.final[s.id]).sub,to:s.sub})).filter(m=>m.from!==m.to);
   const subs=sortSubs(uniq([...C.seats.map(s=>s.sub),...C.emps.map(e=>e.sub)]));
   const M={};moves.forEach(m=>{M[m.from+">"+m.to]=(M[m.from+">"+m.to]||0)+1});const mx=Math.max(1,...Object.values(M));
   const out=s=>moves.filter(m=>m.from===s).length, inn=s=>moves.filter(m=>m.to===s).length;
@@ -795,10 +1051,15 @@ function download(text,name){try{const a=document.createElement("a");a.href=URL.
 
 /* ---------------- Events ---------------- */
 document.addEventListener("click",ev=>{
-  const tab=ev.target.closest("#tabs button");if(tab){TAB=tab.dataset.tab;try{history.replaceState(null,"","#"+TAB)}catch(e){}renderHeader();renderTab();return}
   const a=ev.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
-  if(act==="login"){S.role=a.dataset.role;DATA_SCOPE="mine";F={sub:"",grade:"",disc:"",status:"",q:""};EMP_SEL="";renderAll();toast("Signed in as "+loginOf(S.role).id);return}
-  if(act==="switch"){S.role="";save();renderLogin();return}
+  if(act==="nav"){ev.preventDefault();go(a.dataset.tab);return}
+  if(act==="go"){ev.preventDefault();go(a.dataset.tab,a.dataset.status||"");return}
+  if(act==="openNav"){document.body.classList.add("nav-open");const f=$("#nav a");if(f)f.focus();return}
+  if(act==="closeNav"){document.body.classList.remove("nav-open");return}
+  if(act==="theme"){setTheme(a.dataset.v);return}
+  if(act==="toggleTheme"){setTheme(isDark()?"light":"dark");return}
+  if(act==="login"){S.role=a.dataset.role;DATA_SCOPE="mine";DASH_SUB="";F={sub:"",grade:"",disc:"",status:"",q:""};EMP_SEL="";TAB="home";try{history.replaceState(null,"","#home")}catch(e){}renderAll();window.scrollTo(0,0);toast("Signed in as "+loginOf(S.role).id);return}
+  if(act==="switch"){S.role="";save();document.body.classList.remove("nav-open");renderAll();return}
   if(act==="close"&&(ev.target===a||a.tagName==="BUTTON")){$("#layer").innerHTML="";return}
   if(act==="dec"){if(!isCIL())return;const s=a.dataset.seat,v=a.dataset.v,d=decOf(s);if(d&&!d.stale&&d.v===v)delete S.decisions[s];else S.decisions[s]={v,emp:C.final[s]||null,at:new Date().toISOString().slice(0,10)};renderAll();return}
   if(act==="export"){showExport("Decision sheet",[SHEET_HDR,...sheetRows()],"One row per seat with the suggested executive, transfer or promotion, the basis for the match and CIL HQ's decision. Copy for Excel pastes straight into a sheet.");return}
@@ -822,6 +1083,7 @@ document.addEventListener("change",ev=>{
   const t=ev.target;
   if(t.classList.contains("ovr")){if(!isCIL())return;const s=t.dataset.seat,v=t.value;if((v==="__none"&&C.auto[s]===null)||v===C.auto[s])delete S.overrides[s];else S.overrides[s]=v;renderAll();return}
   if(t.id==="empPick"){EMP_SEL=t.value;renderEmp();return}
+  if(t.id==="dashSub"){DASH_SUB=t.value;renderDash();return}
   if(["fsub","fgrade","fdisc","fstatus"].includes(t.id)){F[{fsub:"sub",fgrade:"grade",fdisc:"disc",fstatus:"status"}[t.id]]=t.value;renderSugg();return}
   if(t.dataset.rule){if(!isCIL())return;const k=t.dataset.rule;S.rules[k]=t.type==="checkbox"?t.checked:t.type==="number"?(+t.value||0):t.value;renderAll();return}
   if(t.dataset.up&&t.files&&t.files[0]){const f=t.files[0],r=new FileReader();r.onload=()=>ingest(t.dataset.up,r.result,f.name);r.readAsText(f)}
@@ -832,13 +1094,14 @@ let wT;document.addEventListener("input",ev=>{const t=ev.target;
 document.addEventListener("dragover",ev=>{const d=ev.target.closest("[data-drop]");if(d){ev.preventDefault();d.classList.add("over")}});
 document.addEventListener("dragleave",ev=>{const d=ev.target.closest("[data-drop]");if(d)d.classList.remove("over")});
 document.addEventListener("drop",ev=>{const d=ev.target.closest("[data-drop]");if(!d)return;ev.preventDefault();d.classList.remove("over");const f=ev.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingest(d.dataset.drop,r.result,f.name);r.readAsText(f)});
-document.addEventListener("keydown",ev=>{if(ev.key==="Escape")$("#layer").innerHTML=""});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){$("#layer").innerHTML="";document.body.classList.remove("nav-open")}});
+window.addEventListener("hashchange",()=>{const hsh=(location.hash||"").slice(1);if(S&&S.role&&PAGES.some(p=>p.id===hsh)&&hsh!==TAB){TAB=hsh;renderShell();renderTab()}});
 
 try{
   S=load();
-  const hsh=(location.hash||"").slice(1);if(["suggestions","rotation","employee","flow","rules","data"].includes(hsh))TAB=hsh;
+  const hsh=(location.hash||"").slice(1);if(PAGES.some(p=>p.id===hsh))TAB=hsh;
   renderAll();
-}catch(err){document.getElementById("main").innerHTML=`<div class="banner bad" style="margin-top:16px">Something went wrong while loading the tool. Please pass this message on: ${String(err&&err.message||err).replace(/[<>&]/g,"")}</div>`}
+}catch(err){document.body.insertAdjacentHTML("afterbegin",`<div class="banner bad" style="margin:16px">Something went wrong while loading the tool. Please pass this message on: ${String(err&&err.message||err).replace(/[<>&]/g,"")}</div>`)}
 </script>
 </body>
 </html>

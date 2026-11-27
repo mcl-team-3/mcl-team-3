@@ -88,9 +88,11 @@
   Requirement columns: ReqID, Subsidiary,
   Unit, Department, Grade, Discipline, RequiredExpertise, MinYears,
   Positions, Priority, Remarks.
-- Pages: index.html = the whole tool (sign-in screen, then tabs: Posting
-  suggestions, Sensitive posts & promotion, Employee view, Transfer flow,
-  Rules & weights, Data); no dashboard.html yet
+- Pages: index.html = the whole tool. Sign-in screen, then a left menu
+  (drawer on phones) with: Home, Dashboard, Posting suggestions, Sensitive
+  & promotion, Employees, Transfer flow, Data, Rules. Each is a section of
+  index.html reached by #name in the address (e.g. #dashboard), so the
+  3-page limit still holds. Light / Dark / Auto theme switch in the menu.
 
 ## Progress Log (newest entry at the bottom)
 - Phase 0 (starter): placeholder index.html, config.js without settings and
@@ -116,3 +118,11 @@
   below with at least 3 years in grade. Works in local tests. Known gaps:
   data and decisions still stay in each browser, so a subsidiary's updates
   do not reach CIL HQ's screen. Next: shared storage in Supabase.
+- 2026-11-27 (builder: Claude): redesigned the interface like an HR portal
+  (left menu as in BambooHR, "Awaiting your action" list as in Workday).
+  New full-page sign-in, Home page (greeting, cycle progress, tasks for the
+  logged-in office, policy summary, quick links), Dashboard (KPI tiles,
+  decision progress bar, Chart.js charts with a "Show as table" option,
+  expertise gaps), menu badges, Light/Dark/Auto theme. Matching logic not
+  changed. Works in local tests; charts need the live site (Chart.js loads
+  from jsDelivr). Known gaps: same as before (data stays in each browser).
