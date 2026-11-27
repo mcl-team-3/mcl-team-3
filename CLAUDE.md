@@ -84,11 +84,13 @@
   browser (templates/ folder) and kept in the browser only. Employee columns:
   EmpID, Name, Grade, Discipline, Subsidiary, Unit, Department, DateOfBirth,
   DateOfJoining, GradeSince, PostingSince, GradeHistory, Expertise,
-  PreferredSubsidiaries, Exemption. Requirement columns: ReqID, Subsidiary,
+  PreferredSubsidiaries, Exemption, SensitivePost, SensitivePostSince.
+  Requirement columns: ReqID, Subsidiary,
   Unit, Department, Grade, Discipline, RequiredExpertise, MinYears,
   Positions, Priority, Remarks.
-- Pages: index.html = the whole tool (tabs: Posting suggestions, Employee
-  view, Transfer flow, Rules & weights, Data); no dashboard.html yet
+- Pages: index.html = the whole tool (sign-in screen, then tabs: Posting
+  suggestions, Sensitive posts & promotion, Employee view, Transfer flow,
+  Rules & weights, Data); no dashboard.html yet
 
 ## Progress Log (newest entry at the bottom)
 - Phase 0 (starter): placeholder index.html, config.js without settings and
@@ -102,3 +104,15 @@
   for Excel. Known gaps: does not use Supabase yet, so decisions are saved
   only in each person's own browser. Next: save decisions to a Supabase
   table if the team wants shared decisions.
+- 2026-11-27 (builder: Claude): added (1) demo login IDs with no password:
+  cil.hq (review & approval) and one per subsidiary, e.g. mcl.hq
+  (updation). Subsidiary logins add/edit/remove/upload only their own rows
+  and see everything else read-only; only cil.hq can approve, override and
+  change rules. Not real security: anyone can pick any ID (team chose this
+  over Supabase logins; rule 6 "no login" still holds). (2) Sensitive-post
+  flag: SensitivePost + SensitivePostSince columns; over 3 years is flagged
+  and placed first in matching; new "Sensitive posts & promotion" tab.
+  (3) Promotion: seats left after transfers go to executives one grade
+  below with at least 3 years in grade. Works in local tests. Known gaps:
+  data and decisions still stay in each browser, so a subsidiary's updates
+  do not reach CIL HQ's screen. Next: shared storage in Supabase.
