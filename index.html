@@ -6,7 +6,7 @@
 <title>CIL Transfer Matching</title>
 <script>try{var t=localStorage.getItem("ctm-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <style>
 /* Layout: HR-portal shell. Fixed left menu (drawer on phones), sticky top bar, page content in a centred column. */
@@ -18,8 +18,8 @@
   --bar:#E4E8E4;
   --side:#16302A; --side-ink:#DCE7E2; --side-muted:#8FA8A0; --side-hover:#21413A; --side-active:#2B5248; --side-line:#24423B;
   --s1:#2a78d6; --s2:#eb6834; --s-neutral:#B9C1BC; --st-good:#0ca30c; --st-warn:#fab219; --st-crit:#d03b3b; --st-none:#C9CFCB;
-  --f-display:"Archivo","Segoe UI",system-ui,sans-serif;
-  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-display:"Archivo","Noto Sans Devanagari","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Devanagari","Segoe UI",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
   color-scheme:light;
 }
@@ -241,6 +241,51 @@ table.sugg td.req{width:250px} table.sugg td.who{width:300px} table.sugg td.fit{
 .rank td{padding:8px 12px}
 @media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s ease}}
 
+/* ---- Language switch ---- */
+.langbtn{background:var(--surface);border:1px solid var(--line);border-radius:9px;min-height:40px;padding:0 12px;cursor:pointer;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.langbtn:hover{border-color:var(--muted)}
+.signin-top{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:8px;z-index:5}
+:lang(hi) .label,:lang(hi) th{text-transform:none;letter-spacing:0}
+
+/* ---- Executive login & choices ---- */
+.exec-login{display:flex;gap:8px;flex-wrap:wrap}
+.exec-login input{flex:1 1 180px}
+.choice-row{display:grid;grid-template-columns:40px minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center}
+@media (max-width:560px){.choice-row{grid-template-columns:32px minmax(0,1fr)}.choice-row select:last-child{grid-column:2}}
+.choice-row .no{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.choice-row select{width:100%}
+.stat-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:1000px){.stat-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.stat-cards{grid-template-columns:minmax(0,1fr)}}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stat-card .big{font-family:var(--f-display);font-size:1.3rem;font-weight:700}
+.stat-card.good{border-left:4px solid var(--good)} .stat-card.bad{border-left:4px solid var(--bad)} .stat-card.warn{border-left:4px solid var(--warn)} .stat-card.info{border-left:4px solid var(--accent)}
+tr.me-row td{background:var(--accent-soft)!important;font-weight:600}
+tr.clickable{cursor:pointer}
+.dept-open td{background:var(--sunk)}
+
+/* ---- Help chatbot ---- */
+.bot-fab{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40;display:inline-flex;align-items:center;gap:8px;background:var(--ember);color:#fff;border:0;border-radius:999px;padding:12px 18px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);min-height:48px}
+.bot-fab svg.i{width:20px;height:20px}
+.bot-panel{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:45;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 100px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+.bot-head{background:var(--side);color:var(--side-ink);padding:12px 14px;display:flex;align-items:center;gap:10px}
+.bot-head .av{width:34px;height:34px;border-radius:50%;background:var(--ember);color:#fff;display:grid;place-items:center;flex:none}
+.bot-head b{display:block;color:#fff;font-size:.95rem}
+.bot-head span{font-size:.75rem;color:var(--side-muted)}
+.bot-head button{margin-left:auto;background:none;border:0;color:var(--side-ink);cursor:pointer;min-width:36px;min-height:36px;font-size:1.3rem;line-height:1}
+.bot-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:.9rem;line-height:1.45}
+.msg.bot{background:var(--surface);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.user{background:var(--accent);color:var(--accent-ink);align-self:flex-end;border-bottom-right-radius:4px}
+.msg ul{margin:6px 0 0;padding-left:18px}
+.msg .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.msg .acts button{border:1px solid var(--accent);color:var(--accent);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:.8rem;cursor:pointer}
+.bot-chips{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;border-top:1px solid var(--line);background:var(--surface);scrollbar-width:thin}
+.bot-chips button{flex:none;border:1px solid var(--line);background:var(--sunk);border-radius:999px;padding:5px 11px;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.bot-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface)}
+.bot-form input{flex:1;min-width:0}
+@media (max-width:560px){.bot-fab span{display:none}.bot-fab{padding:12px}}
+
 /* ---- Sign-in page ---- */
 .signin{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 @media (max-width:860px){.signin{grid-template-columns:minmax(0,1fr)}}
@@ -279,6 +324,7 @@ table.sugg td.req{width:250px} table.sugg td.who{width:300px} table.sugg td.fit{
       <div class="right">
         <span class="tag hide-sm">Cycle date <b id="cycleTag" class="num"></b></span>
         <span class="tag hide-sm" id="srcTag"></span>
+        <button class="langbtn" data-act="toggleLang" data-notr title="English / हिंदी"><span class="lang-lbl"></span></button>
         <button class="iconbtn" data-act="toggleTheme" id="themeBtn" aria-label="Switch light or dark mode"></button>
       </div>
     </header>
@@ -286,6 +332,7 @@ table.sugg td.req{width:250px} table.sugg td.who{width:300px} table.sugg td.fit{
   </div>
 </div>
 <div id="layer"></div>
+<div id="bot"></div>
 
 <script>
 "use strict";
@@ -482,8 +529,9 @@ function evalPair(e,s,R,eb){
   }
   const min=s.minY;
   let yfit=0; if(best.type!=="none"){ yfit = min>0 ? (best.years>=min ? 0.7+0.3*Math.min(1,(best.years-min)/Math.max(min,2)) : 0.7*best.years/min) : Math.min(1,0.7+0.3*best.years/3); yfit*=best.c; }
-  const prefers=e.prefs.includes(s.sub)||(promo&&e.sub===s.sub);
-  const pref = prefers?1:(e.prefs.length?0:0.4);
+  // Posting choices: 1st choice full credit, 2nd 75%, 3rd 50%. A promotion in the same subsidiary also counts as preferred.
+  const ci=e.prefs.indexOf(s.sub);
+  const pref = ci>=0?[1,0.75,0.5][Math.min(ci,2)]:((promo&&e.sub===s.sub)?1:(e.prefs.length?0:0.4));
   const comps={field:best.c,years:yfit,grade:Math.min(1,e.yGrade/5),service:Math.min(1,e.service/20),tenure:Math.min(1,e.tenure/10),pref};
   let tw=0,sc=0; for(const k in R.w){tw+=R.w[k];sc+=R.w[k]*comps[k]} const score=tw?100*sc/tw:0;
   const why=[];
@@ -493,7 +541,7 @@ function evalPair(e,s,R,eb){
   else why.push(["bad","No "+s.field+" experience"]);
   why.push(promo?[e.yGrade>=R.promoYears?"good":"bad",fmtY(e.yGrade)+" in "+e.grade+" (min "+R.promoYears+")"]:["",fmtY(e.yGrade)+" in "+e.grade]);
   why.push(["",fmtY(e.tenure)+" at "+e.sub]);
-  if(e.prefs.includes(s.sub)) why.push(["good","Prefers "+s.sub]);
+  if(ci>=0) why.push(["good",(e.choiceList?"Choice "+(ci+1)+": ":"Prefers ")+s.sub]);
   if(e.flag) why.push(["bad","Sensitive post "+fmtY(e.sensYears)]);
   return {eligible:blocks.length===0,blocks,score,comps,why,match:best,promo};
 }
@@ -528,6 +576,11 @@ function compute(){
   const R=S.rules, cyc=parseDate(R.cycle)||Date.UTC(2026,10,1);
   const kw=String(R.sensitiveKeywords||"").split(/[;,]/).map(x=>x.trim().toLowerCase()).filter(Boolean);
   const emps=S.emps.map(o=>deriveEmp(o,cyc,R,kw)); const seats=deriveSeats(S.vacs);
+  // Choices given by the executive at login replace the PreferredSubsidiaries column.
+  emps.forEach(e=>{const ch=S.choices&&S.choices[e.id];if(ch&&ch.list&&ch.list.length){e.prefs=ch.list.map(c=>c.sub);e.choiceList=ch.list;e.choiceAt=ch.at}});
+  // Seniority within grade and cadre: earlier entry into the grade ranks higher; ties by date of joining, then age.
+  const sg=new Map(); emps.forEach(e=>{const k=e.grade+"|"+key(e.disc);if(!sg.has(k))sg.set(k,[]);sg.get(k).push(e)});
+  for(const list of sg.values()){list.sort((a,b)=>(b.yGrade-a.yGrade)||(b.service-a.service)||((b.age||0)-(a.age||0))||a.id.localeCompare(b.id));list.forEach((e,i)=>{e.senRank=i+1;e.senOf=list.length})}
   const empById=new Map(emps.map(e=>[e.id,e])); const eb=new Map(emps.map(e=>[e.id,empBlocks(e,R)]));
   const byGrade=new Map(); emps.forEach(e=>{if(!byGrade.has(e.grade))byGrade.set(e.grade,[]);byGrade.get(e.grade).push(e)});
   const cands=new Map(), pcands=new Map();
@@ -556,13 +609,15 @@ const tier=s=>s>=75?["strong","Strong"]:s>=60?["good","Good"]:["fair","Fair"];
 /* ---------------- State, login and permissions ---------------- */
 const LS="cil-transfer-matching-v2";
 let S; let F={sub:"",grade:"",disc:"",status:"",q:""}; let TAB="home"; let EMP_SEL=""; let DATA_VIEW="emps"; let DATA_SCOPE="mine"; let DASH_SUB="";
-function freshState(){const d=makeSample();return {emps:d.emps,vacs:d.vacs,rules:structuredClone(DEFAULT_RULES),overrides:{},decisions:{},updates:{},src:{emps:"Sample data",vacs:"Sample data"},role:""}}
-function load(){try{const t=localStorage.getItem(LS);if(t){const o=JSON.parse(t);if(o&&Array.isArray(o.emps)&&Array.isArray(o.vacs)){o.rules={...structuredClone(DEFAULT_RULES),...o.rules,w:{...DEFAULT_RULES.w,...(o.rules||{}).w}};o.updates=o.updates||{};o.overrides=o.overrides||{};o.decisions=o.decisions||{};return o}}}catch(e){}return freshState()}
+function freshState(){const d=makeSample();return {emps:d.emps,vacs:d.vacs,rules:structuredClone(DEFAULT_RULES),overrides:{},decisions:{},updates:{},choices:{},src:{emps:"Sample data",vacs:"Sample data"},role:""}}
+function load(){try{const t=localStorage.getItem(LS);if(t){const o=JSON.parse(t);if(o&&Array.isArray(o.emps)&&Array.isArray(o.vacs)){o.rules={...structuredClone(DEFAULT_RULES),...o.rules,w:{...DEFAULT_RULES.w,...(o.rules||{}).w}};o.updates=o.updates||{};o.overrides=o.overrides||{};o.decisions=o.decisions||{};o.choices=o.choices||{};return o}}}catch(e){}return freshState()}
 function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
 const isCIL=()=>S.role==="CIL HQ";
-const loginOf=r=>LOGINS.find(l=>l.role===r);
-const mySeat=s=>{if(isCIL())return true;if(s.sub===S.role)return true;const id=C.final[s.id],e=id&&C.empById.get(id);return !!(e&&e.sub===S.role)};
-const myEmp=e=>isCIL()||e.sub===S.role;
+const isExec=()=>String(S.role||"").startsWith("EMP:");
+const execId=()=>isExec()?S.role.slice(4):null;
+const loginOf=r=>{if(String(r||"").startsWith("EMP:")){const id=r.slice(4),o=S.emps.find(x=>String(x.EmpID)===id)||{};return {id,role:r,label:o.Name||id,power:"Executive"}}return LOGINS.find(l=>l.role===r)};
+const mySeat=s=>{if(isCIL())return true;if(isExec())return C.final[s.id]===execId();if(s.sub===S.role)return true;const id=C.final[s.id],e=id&&C.empById.get(id);return !!(e&&e.sub===S.role)};
+const myEmp=e=>isCIL()||(isExec()?e.id===execId():e.sub===S.role);
 const canEditRow=o=>normSub(o.Subsidiary)===S.role;
 function decOf(sid){let d=S.decisions[sid];if(!d)return null;if(typeof d==="string")d={v:d};const f=C.final[sid]||null;if(d.emp!==undefined&&d.emp!==f)return {...d,stale:true};return d}
 function markUpdate(what){S.updates[S.role]={at:new Date().toISOString().slice(0,16).replace("T"," "),by:loginOf(S.role).id,what}}
@@ -584,7 +639,13 @@ const IC={
   out:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>',
   chev:'<path d="m9 6 6 6-6 6"/>',
   check:'<path d="m5 12 5 5 9-10"/>',
-  upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'
+  upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+  dept:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="8.5" y="14" width="7" height="7" rx="1.5"/><path d="M6.5 10v2h11v-2M12 12v2"/>',
+  rank:'<path d="M8 21V11M12 21V5M16 21v-7M4 21h16"/>',
+  pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+  send:'<path d="M4 12 20 4l-6 16-3-7z"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/>'
 };
 const icon=(n,cls="i")=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
 
@@ -609,10 +670,20 @@ const PAGES=[
   {id:"rotation",label:"Sensitive & promotion",icon:"shield",group:"Transfer cycle",title:"Sensitive posts & promotion"},
   {id:"employee",label:"Employees",icon:"users",group:"Transfer cycle",title:"Employee view"},
   {id:"flow",label:"Transfer flow",icon:"flow",group:"Transfer cycle",title:"Transfer flow"},
+  {id:"departments",label:"Departments",icon:"dept",group:"People",title:"Department-wise employees"},
+  {id:"seniority",label:"Seniority",icon:"rank",group:"People",title:"Seniority list"},
   {id:"data",label:"Data",icon:"data",group:"Setup",title:"Employee & vacancy data"},
   {id:"rules",label:"Rules",icon:"rules",group:"Setup",title:"Rules & weights"}
 ];
-const pageOf=id=>PAGES.find(p=>p.id===id)||PAGES[0];
+// Executives see their own portal: home, posting choices and the seniority list of their grade and cadre.
+const EXEC_PAGES=[
+  {id:"home",label:"My home",icon:"home",group:"My portal",title:"My home"},
+  {id:"choices",label:"My posting choices",icon:"pin",group:"My portal",title:"My posting choices"},
+  {id:"seniority",label:"Seniority",icon:"rank",group:"My portal",title:"Seniority list"},
+  {id:"rules",label:"Transfer policy",icon:"rules",group:"My portal",title:"Transfer policy"}
+];
+const visiblePages=()=>isExec()?EXEC_PAGES:PAGES;
+const pageOf=id=>visiblePages().find(p=>p.id===id)||visiblePages()[0];
 function go(tab,status){TAB=pageOf(tab).id;if(status!==undefined)F={sub:"",grade:"",disc:"",status,q:""};document.body.classList.remove("nav-open");
   if(location.hash!=="#"+TAB){try{history.pushState(null,"","#"+TAB)}catch(e){}}renderShell();renderTab();$("#main").focus?.();window.scrollTo(0,0)}
 
@@ -630,11 +701,15 @@ try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{re
 
 /* ---------------- Shell ---------------- */
 function renderAll(){
-  if(!S.role){$("#app").hidden=true;renderLogin();return}
-  $("#signin").innerHTML="";$("#app").hidden=false;compute();renderShell();renderTab();save();
+  if(isExec()&&!S.emps.some(o=>String(o.EmpID)===execId()))S.role="";
+  document.documentElement.lang=LANG==="hi"?"hi":"en";
+  if(!S.role){$("#app").hidden=true;renderLogin();renderBot();return}
+  if(!visiblePages().some(p=>p.id===TAB))TAB="home";
+  $("#signin").innerHTML="";$("#app").hidden=false;compute();renderShell();renderTab();renderBot();save();
 }
 function badges(){
   const b={};
+  if(isExec()){if(!(S.choices[execId()]&&S.choices[execId()].list.length))b.choices="!";return b}
   if(isCIL()){b.suggestions=C.seats.filter(s=>C.final[s.id]&&!(decOf(s.id)&&!decOf(s.id).stale)).length}
   const fl=C.emps.filter(e=>myEmp(e)&&e.flag&&!C.seatOf[e.id]).length; if(fl)b.rotation=fl;
   return b;
@@ -642,7 +717,7 @@ function badges(){
 function renderShell(){
   const l=loginOf(S.role), p=pageOf(TAB), b=badges();
   let html="",grp="";
-  PAGES.forEach(pg=>{if(pg.group!==grp){if(grp)html+="</div>";grp=pg.group;html+=`<div class="nav-group"><div class="gl">${h(grp)}</div>`}
+  visiblePages().forEach(pg=>{if(pg.group!==grp){if(grp)html+="</div>";grp=pg.group;html+=`<div class="nav-group"><div class="gl">${h(grp)}</div>`}
     html+=`<a href="#${pg.id}" data-act="nav" data-tab="${pg.id}"${pg.id===TAB?' aria-current="page"':""}>${icon(pg.icon)}<span>${h(pg.label)}</span>${b[pg.id]?`<span class="cnt${pg.id==="suggestions"?" soft":""}" title="${pg.id==="suggestions"?"Awaiting decision":"Not yet moved"}">${b[pg.id]}</span>`:""}</a>`});
   $("#nav").innerHTML=html+"</div>";
   $("#me").innerHTML=`<div class="av">${h(l.label.split(" ")[0].slice(0,4))}</div><div class="t"><b>${h(l.id)}</b><span>${h(l.label)} · ${h(l.power)}</span></div><button data-act="switch" title="Switch login" aria-label="Switch login">${icon("out")}</button>`;
@@ -651,7 +726,7 @@ function renderShell(){
   $("#cycleTag").textContent=new Date(C.cyc).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"});
   $("#cycleLbl").textContent=new Date(C.cyc).toLocaleDateString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"})+" transfer cycle";
   const sample=S.src.emps==="Sample data"&&S.src.vacs==="Sample data";$("#srcTag").innerHTML=sample?"<b>Sample data</b> (fictional)":`Data: <b>${h(S.src.emps)}</b>`;
-  renderThemeControls();
+  renderThemeControls();renderLangControls();
 }
 function renderLogin(){
   const grp=(t,list)=>`<div class="grp">${t}</div>`+list.map(l=>`<button data-act="login" data-role="${h(l.role)}"><span><span class="id">${h(l.id)}</span><br><span class="muted" style="font-size:.85rem">${h(l.role==="CIL HQ"?"CIL Headquarters, Kolkata":(SUBS[l.role]||{}).name||l.label)}</span></span><span class="pill ${l.role==="CIL HQ"?"p-Approve":"p-Low"}">${h(l.power)}</span></button>`).join("");
@@ -663,12 +738,16 @@ function renderLogin(){
        <li>${icon("check")}<span>Rotates executives who have held a sensitive post for more than three years.</span></li>
        <li>${icon("check")}<span>Fills the remaining vacancies by promotion, with every suggestion explained for CIL HQ.</span></li></ul></div>
    <div class="form-side"><div class="box"><div><h2>Sign in</h2><p class="muted" style="margin:4px 0 0;font-size:.92rem">Choose your office's login ID.</p></div>
-     <div class="login-ids">${grp("Review &amp; approval",LOGINS.filter(l=>l.role==="CIL HQ"))}${grp("Subsidiary HQs · updation",LOGINS.filter(l=>l.role!=="CIL HQ"))}</div>
+     <div class="card" style="gap:8px"><h3>Executive login</h3><p class="muted" style="font-size:.88rem">Every executive signs in with their own EIS / employee number to give three posting choices and see their seniority.</p>
+       <form class="exec-login" id="execForm"><input type="text" id="execId" inputmode="numeric" autocomplete="off" placeholder="EIS / employee number" aria-label="EIS / employee number"><button class="btn primary" type="submit">Continue</button></form>
+       <div class="err" id="execErr"></div><p class="muted" style="font-size:.8rem">Example from the sample data: <span class="mono" data-notr>90011000</span> (Sanjay Pradhan, MCL)</p></div>
+     <div class="login-ids"><div class="grp">Office login</div>${grp("Review &amp; approval",LOGINS.filter(l=>l.role==="CIL HQ"))}${grp("Subsidiary HQs · updation",LOGINS.filter(l=>l.role!=="CIL HQ"))}</div>
      <p class="muted" style="margin:0;font-size:.8rem">Demo sign-in with no password: anyone can choose any login ID. Data stays in this browser.</p>
-     <div class="theme-seg" role="group" aria-label="Colour theme" id="themeSeg" style="background:var(--sunk)"></div></div></div></div>`;
-  renderThemeControls();document.querySelectorAll("#themeSeg button").forEach(b=>{b.style.color="var(--ink)"});
+     <div class="theme-seg" role="group" aria-label="Colour theme" id="themeSeg" style="background:var(--sunk)"></div></div></div>
+   <div class="signin-top"><button class="langbtn" data-act="toggleLang" data-notr title="English / हिंदी">${icon("globe")}<span class="lang-lbl"></span></button></div></div>`;
+  renderThemeControls();renderLangControls();document.querySelectorAll("#themeSeg button").forEach(b=>{b.style.color="var(--ink)"});
 }
-function renderTab(){({home:renderHome,dashboard:renderDash,suggestions:renderSugg,rotation:renderRotation,employee:renderEmp,flow:renderFlow,rules:renderRules,data:renderData})[TAB]()}
+function renderTab(){({home:isExec()?renderExecHome:renderHome,dashboard:renderDash,suggestions:renderSugg,rotation:renderRotation,employee:renderEmp,flow:renderFlow,rules:renderRules,data:renderData,departments:renderDepts,seniority:renderSeniority,choices:renderChoices})[TAB]()}
 
 /* ----- Shared numbers ----- */
 function stats(sub){
@@ -691,12 +770,14 @@ function renderHome(){
     const fl=st.flagged.length-st.moved.length; if(fl)tasks.push(["bad",fl,`Sensitive posts held over ${R.sensitiveYears} years, no move found`,"Decide on rotation within their subsidiary.","rotation"]);
     const vac=st.seats.length-st.filled.length; if(vac)tasks.push(["info",vac,"Seats with no suitable candidate","Consider recruitment or relaxing minimum years.","suggestions","unfilled"]);
     const notUpd=SUB_ORDER.filter(s=>s!=="CIL HQ"&&!S.updates[s]).length; if(notUpd)tasks.push(["info",notUpd,"Subsidiaries yet to update data this cycle","See the update status on the Data page.","data"]);
+    const noCh=st.emps.filter(e=>!e.choiceList&&!C.eb.get(e.id).length).length; if(noCh)tasks.push(["info",noCh,"Eligible executives yet to give posting choices","Each executive signs in with their EIS number to choose.","departments"]);
   } else {
     const me=S.role, upd=S.updates[me];
     if(!upd)tasks.push(["warn","!",`Update ${me}'s employee data`,"Upload the HRMS export or edit rows on the Data page.","data"]);
     const noSens=st.emps.filter(e=>!String(e.SensitivePost||"").trim()).length; if(noSens)tasks.push(["warn",noSens,"Executives without sensitive-post status","Mark each as Yes or No so rotation is correct.","data"]);
     const gaps=st.emps.filter(e=>!e.PostingSince||!e.DateOfBirth||!e.exp.some(x=>x.years>0)).length; if(gaps)tasks.push(["bad",gaps,"Employee records with missing details","Posting date, date of birth or years of expertise missing.","data"]);
     const vl=S.vacs.filter(v=>normSub(v.Subsidiary)===me).length; tasks.push([vl?"good":"warn",vl,vl?`Vacancy lines entered for ${me}`:`No vacancies entered for ${me}`,"Add this cycle's requirements on the Data page.","data"]);
+    const noCh=st.emps.filter(e=>!e.choiceList&&!C.eb.get(e.id).length).length; if(noCh)tasks.push(["info",noCh,"Eligible executives yet to give posting choices","Remind them to sign in with their EIS number.","departments"]);
     const out=C.emps.filter(e=>e.sub===me&&C.seatOf[e.id]&&C.seatOf[e.id].sub!==me).length; if(out)tasks.push(["info",out,`${me} executives proposed to move out`,"Plan relief and handover for these officers.","suggestions"]);
   }
   const decided=st.filled.length-st.dec.Pending, updCount=SUB_ORDER.filter(s=>s!=="CIL HQ"&&S.updates[s]).length;
@@ -705,7 +786,7 @@ function renderHome(){
     :[["data","upload","Update data","Employees and vacancies"],["suggestions","swap","Our postings","Seats and moves for "+S.role],["employee","users","Employee lookup","Profile and options"],["dashboard","dash","Dashboard",S.role+" at a glance"]]);
   $("#main").innerHTML=`<section class="panel">
    <div class="hello"><div><h1>${greet}, ${h(l.label)}</h1><p>${isCIL()?"You review and approve postings for all subsidiaries.":"You update "+h(S.role)+"'s employees and vacancies. CIL HQ reviews and approves postings."}</p></div>
-     <span class="tag"><b>${new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}</b></span></div>
+     <span class="tag"><b>${new Date().toLocaleDateString(LANG==="hi"?"hi-IN":"en-IN",{weekday:"long",day:"numeric",month:"long"})}</b></span></div>
    <div class="card"><div class="card-h"><h2>Transfer cycle progress</h2></div>
      <div class="stages">
       ${stage(updCount>=SUB_ORDER.length-1?"done":"now",1,"Subsidiaries update data",`${updCount} of ${SUB_ORDER.length-1} updated this cycle`)}
@@ -718,12 +799,13 @@ function renderHome(){
       <div class="tasks">${tasks.length?tasks.map(([tone,n,t,s,tab,stt])=>`<button class="task" data-act="go" data-tab="${tab}"${stt?` data-status="${stt}"`:""}><span class="n ${tone}">${n}</span><span><span class="tt">${h(t)}</span><br><span class="ts">${h(s)}</span></span><span class="go">${icon("chev")}</span></button>`).join(""):`<p class="muted">Nothing waiting. All caught up.</p>`}</div></div>
     <div class="card"><h2>Transfer policy this cycle</h2>
       <ul class="policy">
-        <li>Transfer after at least <b>${R.minTenure} years</b> at the present posting.</li>
-        <li>Matched by <b>field of expertise</b> and years in it; ${R.sameDiscipline?"same discipline only":"any discipline"}.</li>
-        <li>Sensitive posts (bill payment, tendering, stores, cash, sales) rotate after <b>${R.sensitiveYears} years</b>.</li>
-        <li>Promotion after <b>${R.promoYears} years</b> in grade, only against a vacancy.</li>
-        <li>No transfer within <b>${R.retireBuffer} years</b> of superannuation at ${R.retireAge}.</li>
-        ${R.honorExempt?"<li>Recorded exemptions (spouse posting, medical) are respected.</li>":""}
+        <li>${L(`Transfer after at least <b>${R.minTenure} years</b> at the present posting.`,`वर्तमान पदस्थापना पर कम से कम <b>${R.minTenure} वर्ष</b> के बाद स्थानांतरण।`)}</li>
+        <li>${L(`Matched by <b>field of expertise</b> and years in it; ${R.sameDiscipline?"same discipline only":"any discipline"}.`,`<b>विशेषज्ञता क्षेत्र</b> व उसमें वर्षों के आधार पर मिलान; ${R.sameDiscipline?"केवल समान संवर्ग":"कोई भी संवर्ग"}।`)}</li>
+        <li>${L(`Sensitive posts (bill payment, tendering, stores, cash, sales) rotate after <b>${R.sensitiveYears} years</b>.`,`संवेदनशील पदों (बिल भुगतान, निविदा, भंडार, नकद, विक्रय) पर <b>${R.sensitiveYears} वर्ष</b> बाद रोटेशन।`)}</li>
+        <li>${L(`Promotion after <b>${R.promoYears} years</b> in grade, only against a vacancy.`,`ग्रेड में <b>${R.promoYears} वर्ष</b> बाद पदोन्नति, केवल रिक्ति होने पर।`)}</li>
+        <li>${L(`No transfer within <b>${R.retireBuffer} years</b> of superannuation at ${R.retireAge}.`,`${R.retireAge} वर्ष की सेवानिवृत्ति से <b>${R.retireBuffer} वर्ष</b> पहले स्थानांतरण नहीं।`)}</li>
+        <li>${L("Executives give up to three posting choices; the first counts most.","अधिकारी अधिकतम तीन पदस्थापना विकल्प देते हैं; पहला सबसे महत्वपूर्ण।")}</li>
+        ${R.honorExempt?`<li>${L("Recorded exemptions (spouse posting, medical) are respected.","दर्ज छूट (पति/पत्नी पदस्थापना, चिकित्सा) का पालन होता है।")}</li>`:""}
       </ul>
       <a class="btn small" href="#rules" data-act="nav" data-tab="rules" style="align-self:flex-start">See all rules</a></div>
    </div>
@@ -774,10 +856,10 @@ function renderDash(){
       plugins:{legend:{position:"top",align:"start",labels:{boxWidth:10,boxHeight:10,useBorderRadius:true,borderRadius:3,color:ink}},tooltip:{backgroundColor:ink,titleColor:surf,bodyColor:surf,padding:10,cornerRadius:6}},
       scales:{x:{stacked,grid:{color:horizontal?line:"transparent",drawTicks:false},border:{color:line},ticks:{color:muted,precision:0,padding:6}},y:{stacked,grid:{color:horizontal?"transparent":line,drawTicks:false},border:{color:line},ticks:{color:horizontal?ink:muted,precision:0,padding:6}}}});
     const ds=(label,data,color)=>({label,data,backgroundColor:color,borderColor:surf,borderWidth:{right:2,left:0,top:0,bottom:0},borderRadius:4,borderSkipped:false,barThickness:16});
-    CHARTS.push(new Chart($("#chSeats"),{type:"bar",data:{labels:bySub.map(r=>r.s),datasets:[ds("By transfer",bySub.map(r=>r.t),s1),ds("By promotion",bySub.map(r=>r.p),s2),ds("Still vacant",bySub.map(r=>r.v),neu)]},options:base(true,true)}));
-    CHARTS.push(new Chart($("#chSens"),{type:"bar",data:{labels:bySub.map(r=>r.s),datasets:[ds("Given a move",bySub.map(r=>r.fm),s1),ds("Not moved",bySub.map(r=>r.fn),s2)]},options:base(true,true)}));
+    CHARTS.push(new Chart($("#chSeats"),{type:"bar",data:{labels:bySub.map(r=>r.s),datasets:[ds(t("By transfer"),bySub.map(r=>r.t),s1),ds(t("By promotion"),bySub.map(r=>r.p),s2),ds(t("Still vacant"),bySub.map(r=>r.v),neu)]},options:base(true,true)}));
+    CHARTS.push(new Chart($("#chSens"),{type:"bar",data:{labels:bySub.map(r=>r.s),datasets:[ds(t("Given a move"),bySub.map(r=>r.fm),s1),ds(t("Not moved"),bySub.map(r=>r.fn),s2)]},options:base(true,true)}));
     const fo=base(false,false);fo.plugins.legend.display=false;
-    CHARTS.push(new Chart($("#chFit"),{type:"bar",data:{labels:tiers.map(t=>t[0]),datasets:[{label:"Postings",data:tiers.map(t=>t[1]),backgroundColor:s1,borderRadius:4,borderSkipped:"start",barThickness:40}]},options:fo}));
+    CHARTS.push(new Chart($("#chFit"),{type:"bar",data:{labels:tiers.map(x=>t(x[0])),datasets:[{label:t("Postings"),data:tiers.map(x=>x[1]),backgroundColor:s1,borderRadius:4,borderSkipped:"start",barThickness:40}]},options:fo}));
   }catch(err){$("#chartErr").textContent="Charts could not be drawn. The tables under each chart still show the numbers. Error: "+err.message}
 }
 
@@ -888,7 +970,7 @@ function renderEmp(){
     const promoOK=e.yGrade>=C.R.promoYears;
     body=`<div class="grid2">
      <div class="card"><div><div class="label">${h(e.id)}</div><h2>${h(e.Name)}</h2><div class="muted">${h(e.grade)} · ${h(e.disc)} · ${subTag(e.sub)} ${h(e.Unit)}</div></div>
-       <dl class="kv"><dt>Department</dt><dd>${h(e.Department||"—")}</dd><dt>Total service</dt><dd class="num">${fmtY(e.service)}</dd><dt>In current grade</dt><dd class="num">${fmtY(e.yGrade)}</dd><dt>At current posting</dt><dd class="num">${fmtY(e.tenure)}</dd><dt>Age at cycle date</dt><dd class="num">${e.age==null?"—":e.age.toFixed(1)}</dd><dt>Sensitive post</dt><dd>${e.sens?`${h(e.sensDesc)} · <span class="num"${e.flag?" style='color:var(--bad);font-weight:600'":""}>${fmtY(e.sensYears)}</span>`:"No"}</dd><dt>Preferences</dt><dd>${e.prefs.length?e.prefs.map(subTag).join(" "):"<span class='muted'>None stated</span>"}</dd></dl>
+       <dl class="kv"><dt>Department</dt><dd>${h(e.Department||"—")}</dd><dt>Total service</dt><dd class="num">${fmtY(e.service)}</dd><dt>In current grade</dt><dd class="num">${fmtY(e.yGrade)}</dd><dt>At current posting</dt><dd class="num">${fmtY(e.tenure)}</dd><dt>Age at cycle date</dt><dd class="num">${e.age==null?"—":e.age.toFixed(1)}</dd><dt>Sensitive post</dt><dd>${e.sens?`${h(e.sensDesc)} · <span class="num"${e.flag?" style='color:var(--bad);font-weight:600'":""}>${fmtY(e.sensYears)}</span>`:"No"}</dd><dt>Seniority</dt><dd class="num">#${e.senRank} of ${e.senOf} in ${h(e.grade)} ${h(e.disc)}</dd><dt>Posting choices</dt><dd>${e.choiceList?e.choiceList.map((c,i)=>`${i+1}. ${subTag(c.sub)} ${h(c.unit||"")}`).join("<br>")+`<div class="muted" style="font-size:.78rem">Given by the executive on ${h(e.choiceAt||"")}</div>`:e.prefs.length?e.prefs.map(subTag).join(" ")+` <span class="muted" style="font-size:.78rem">(from HRMS data)</span>`:"<span class='muted'>Not given yet</span>"}</dd></dl>
        <div><div class="label">Years in each grade</div><div class="chips" style="margin-top:4px">${e.hist.length?e.hist.map(x=>`<span class="chip">${h(x.g)} · ${fmtY(x.y)}</span>`).join(""):"<span class='muted'>Not provided</span>"}</div></div>
        <div><div class="label">Field of expertise</div><div class="chips" style="margin-top:4px">${e.exp.map(x=>`<span class="chip good">${h(x.field)} · ${fmtY(x.years)}</span>`).join("")||"<span class='muted'>Not provided</span>"}</div></div>
      </div>
@@ -1049,9 +1131,317 @@ function copyText(t,ok){const fall=()=>{const ta=$("#expText");if(ta){ta.focus()
   try{navigator.clipboard.writeText(t).then(()=>toast(ok),fall)}catch(e){fall()}}
 function download(text,name){try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+text],{type:"text/csv"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}catch(e){toast("Download failed: "+e.message)}}
 
+/* ---------------- Language (English / Hindi) ---------------- */
+let LANG="en"; try{LANG=localStorage.getItem("ctm-lang")==="hi"?"hi":"en"}catch(e){}
+const L=(en,hi)=>LANG==="hi"?hi:en;
+// Fixed English strings on the page and their Hindi text. Names, places and data values stay as entered.
+const HI={
+ "Overview":"अवलोकन","Transfer cycle":"स्थानांतरण चक्र","People":"कार्मिक","Setup":"व्यवस्था","My portal":"मेरा पोर्टल",
+ "Home":"होम","My home":"मेरा होम","Dashboard":"डैशबोर्ड","Posting suggestions":"पदस्थापना सुझाव","Sensitive & promotion":"संवेदनशील पद व पदोन्नति","Sensitive posts & promotion":"संवेदनशील पद व पदोन्नति",
+ "Employees":"कर्मचारी","Employee view":"कर्मचारी विवरण","Transfer flow":"स्थानांतरण प्रवाह","Departments":"विभाग","Department-wise employees":"विभागवार कर्मचारी","Seniority":"वरिष्ठता","Seniority list":"वरिष्ठता सूची",
+ "Data":"डेटा","Employee & vacancy data":"कर्मचारी व रिक्ति डेटा","Rules":"नियम","Rules & weights":"नियम व भार","Transfer policy":"स्थानांतरण नीति","My posting choices":"मेरे पदस्थापना विकल्प",
+ "Light":"लाइट","Dark":"डार्क","Auto":"स्वतः","Cycle date":"चक्र तिथि","Sample data":"नमूना डेटा","(fictional)":"(काल्पनिक)","Switch login":"लॉगिन बदलें","Open menu":"मेनू खोलें","Colour theme":"रंग थीम","Main menu":"मुख्य मेनू",
+ "Right executive, right post, every November.":"हर नवंबर, सही अधिकारी, सही पद पर।",
+ "Transfers based on what each executive has actually done, matched to what each subsidiary actually needs.":"स्थानांतरण इस आधार पर कि अधिकारी ने वास्तव में क्या कार्य किया है, और अनुषंगी कंपनी को वास्तव में क्या चाहिए।",
+ "Matches field of expertise and years of experience to grade vacancies across all subsidiaries.":"सभी अनुषंगी कंपनियों की ग्रेडवार रिक्तियों से विशेषज्ञता क्षेत्र व अनुभव के वर्षों का मिलान।",
+ "Rotates executives who have held a sensitive post for more than three years.":"तीन वर्ष से अधिक समय से संवेदनशील पद पर कार्यरत अधिकारियों का रोटेशन।",
+ "Fills the remaining vacancies by promotion, with every suggestion explained for CIL HQ.":"शेष रिक्तियाँ पदोन्नति से, हर सुझाव का कारण सीआईएल मुख्यालय हेतु स्पष्ट।",
+ "Sign in":"साइन इन","Choose your office's login ID.":"अपने कार्यालय की लॉगिन आईडी चुनें।","Office login":"कार्यालय लॉगिन","Review & approval":"समीक्षा व अनुमोदन","Subsidiary HQs · updation":"अनुषंगी मुख्यालय · अद्यतन","Updation":"अद्यतन","Executive":"अधिकारी","CIL Headquarters, Kolkata":"सीआईएल मुख्यालय, कोलकाता",
+ "Executive login":"अधिकारी लॉगिन","Every executive signs in with their own EIS / employee number to give three posting choices and see their seniority.":"प्रत्येक अधिकारी अपनी ईआईएस / कर्मचारी संख्या से साइन इन करके तीन पदस्थापना विकल्प दे सकता है और अपनी वरिष्ठता देख सकता है।",
+ "EIS / employee number":"ईआईएस / कर्मचारी संख्या","Continue":"आगे बढ़ें","Example from the sample data:":"नमूना डेटा से उदाहरण:","(Sanjay Pradhan, MCL)":"(संजय प्रधान, एमसीएल)",
+ "Demo sign-in with no password: anyone can choose any login ID. Data stays in this browser.":"डेमो साइन-इन, पासवर्ड नहीं: कोई भी किसी भी लॉगिन आईडी को चुन सकता है। डेटा इसी ब्राउज़र में रहता है।",
+ "You review and approve postings for all subsidiaries.":"आप सभी अनुषंगी कंपनियों की पदस्थापनाओं की समीक्षा व अनुमोदन करते हैं।",
+ "Transfer cycle progress":"स्थानांतरण चक्र की प्रगति","Done":"पूर्ण","In progress":"प्रगति पर","Subsidiaries update data":"अनुषंगी कंपनियाँ डेटा अद्यतन करें","Tool suggests postings":"टूल पदस्थापना सुझाता है","CIL HQ reviews":"सीआईएल मुख्यालय समीक्षा करता है","Orders issued":"आदेश जारी","Copy the decision sheet into the office order":"निर्णय पत्रक को कार्यालय आदेश में लें",
+ "Awaiting your action":"आपकी कार्रवाई की प्रतीक्षा","Nothing waiting. All caught up.":"कुछ भी लंबित नहीं।","Transfer policy this cycle":"इस चक्र की स्थानांतरण नीति","See all rules":"सभी नियम देखें","Quick links":"त्वरित लिंक",
+ "Postings awaiting your decision":"आपके निर्णय हेतु लंबित पदस्थापनाएँ","Approve, hold or reject each suggested posting.":"प्रत्येक सुझाई गई पदस्थापना को स्वीकृत करें, रोकें या अस्वीकृत करें।",
+ "Executives posted to two seats":"दो पदों पर सुझाए गए अधिकारी","Caused by manual changes. Pick one seat for each.":"हाथ से किए बदलावों के कारण। प्रत्येक के लिए एक पद चुनें।",
+ "Decide on rotation within their subsidiary.":"उनकी अनुषंगी कंपनी के भीतर रोटेशन पर निर्णय लें।","Seats with no suitable candidate":"बिना उपयुक्त उम्मीदवार वाले पद","Consider recruitment or relaxing minimum years.":"भर्ती या न्यूनतम वर्षों में छूट पर विचार करें।",
+ "Subsidiaries yet to update data this cycle":"इस चक्र में डेटा अद्यतन न करने वाली अनुषंगी कंपनियाँ","See the update status on the Data page.":"डेटा पृष्ठ पर अद्यतन स्थिति देखें।",
+ "Eligible executives yet to give posting choices":"पदस्थापना विकल्प न देने वाले पात्र अधिकारी","Each executive signs in with their EIS number to choose.":"प्रत्येक अधिकारी अपनी ईआईएस संख्या से साइन इन करके चुनता है।","Remind them to sign in with their EIS number.":"उन्हें ईआईएस संख्या से साइन इन करने की याद दिलाएँ।",
+ "Upload the HRMS export or edit rows on the Data page.":"डेटा पृष्ठ पर एचआरएमएस फ़ाइल अपलोड करें या पंक्तियाँ संपादित करें।","Executives without sensitive-post status":"संवेदनशील पद स्थिति रहित अधिकारी","Mark each as Yes or No so rotation is correct.":"सही रोटेशन हेतु प्रत्येक को हाँ या नहीं चिह्नित करें।",
+ "Employee records with missing details":"अधूरे विवरण वाले कर्मचारी रिकॉर्ड","Posting date, date of birth or years of expertise missing.":"पदस्थापना तिथि, जन्म तिथि या विशेषज्ञता के वर्ष नहीं हैं।","Add this cycle's requirements on the Data page.":"इस चक्र की आवश्यकताएँ डेटा पृष्ठ पर जोड़ें।","Plan relief and handover for these officers.":"इन अधिकारियों के कार्यमुक्ति व कार्यभार हस्तांतरण की योजना बनाएँ।",
+ "Review postings":"पदस्थापनाओं की समीक्षा","Approve or change suggestions":"सुझाव स्वीकृत करें या बदलें","Cycle at a glance":"चक्र एक नज़र में","Rotation and promotions":"रोटेशन व पदोन्नतियाँ","Tenure, weights, limits":"कार्यकाल, भार, सीमाएँ","Update data":"डेटा अद्यतन","Employees and vacancies":"कर्मचारी व रिक्तियाँ","Our postings":"हमारी पदस्थापनाएँ","Employee lookup":"कर्मचारी खोज","Profile and options":"प्रोफ़ाइल व विकल्प",
+ "Seats to fill":"भरे जाने वाले पद","Transfers suggested":"सुझाए गए स्थानांतरण","Filled by promotion":"पदोन्नति से भरे","Still vacant":"अभी भी रिक्त","Needs recruitment":"भर्ती आवश्यक","Approved":"स्वीकृत","All subsidiaries":"सभी अनुषंगी कंपनियाँ",
+ "Decision progress":"निर्णय की प्रगति","Review pending":"लंबित की समीक्षा","Seats by subsidiary":"अनुषंगीवार पद","Open postings":"पदस्थापनाएँ खोलें","Open list":"सूची खोलें","Quality of suggested matches":"सुझाए गए मिलानों की गुणवत्ता","Expertise most in demand":"सर्वाधिक माँग वाली विशेषज्ञता","Show as table":"तालिका रूप में देखें","Decision sheet":"निर्णय पत्रक",
+ "A gap means no internal executive fits. Plan recruitment or training in that field.":"कमी का अर्थ है कोई आंतरिक अधिकारी उपयुक्त नहीं। उस क्षेत्र में भर्ती या प्रशिक्षण की योजना बनाएँ।",
+ "Field":"क्षेत्र","Seats":"पद","Filled":"भरे","Gap":"कमी","Subsidiary":"अनुषंगी कंपनी","Transfer":"स्थानांतरण","Promotion":"पदोन्नति","Vacant":"रिक्त","Given a move":"स्थानांतरण मिला","Not moved":"स्थानांतरण नहीं","Fit band":"उपयुक्तता श्रेणी","Postings":"पदस्थापनाएँ",
+ "By transfer":"स्थानांतरण से","By promotion":"पदोन्नति से","Strong (75+)":"उत्तम (75+)","Good (60–74)":"अच्छा (60–74)","Fair (below 60)":"सामान्य (60 से कम)",
+ "Requirement":"आवश्यकता","Suggested posting":"सुझाई गई पदस्थापना","Fit":"उपयुक्तता","Basis":"आधार","Decision":"निर्णय","Approve":"स्वीकृत","Hold":"रोकें","Reject":"अस्वीकृत","All grades":"सभी ग्रेड","All disciplines":"सभी संवर्ग","All seats":"सभी पद","Suggested":"सुझाए गए",
+ "Sensitive-post rotation":"संवेदनशील पद रोटेशन","Awaiting decision":"निर्णय लंबित","Manually changed":"हाथ से बदले","Conflicts":"टकराव","No suitable internal candidate":"कोई उपयुक्त आंतरिक उम्मीदवार नहीं","Leave vacant":"रिक्त छोड़ें","Awaiting CIL HQ review":"सीआईएल मुख्यालय की समीक्षा लंबित","Manual choice":"हाथ से चयन","Also posted elsewhere":"अन्यत्र भी सुझाए गए",
+ "Strong":"उत्तम","Good":"अच्छा","Fair":"सामान्य","High":"उच्च","Medium":"मध्यम","Low":"निम्न","Needs":"आवश्यक","Consider fresh recruitment or relaxing the minimum years.":"नई भर्ती या न्यूनतम वर्षों में छूट पर विचार करें।","Search name, EIS no., unit, expertise…":"नाम, ईआईएस संख्या, इकाई, विशेषज्ञता खोजें…",
+ "Executive":"अधिकारी","Present posting":"वर्तमान पदस्थापना","Sensitive work":"संवेदनशील कार्य","Years in post":"पद पर वर्ष","This cycle":"इस चक्र में","Promotion against vacancies":"रिक्तियों के विरुद्ध पदोन्नति","Grade":"ग्रेड","Not filled by transfer":"स्थानांतरण से नहीं भरे","None this cycle.":"इस चक्र में कोई नहीं।",
+ "Department":"विभाग","Total service":"कुल सेवा","In current grade":"वर्तमान ग्रेड में","At current posting":"वर्तमान पदस्थापना पर","Age at cycle date":"चक्र तिथि पर आयु","Sensitive post":"संवेदनशील पद","Posting choices":"पदस्थापना विकल्प","Years in each grade":"प्रत्येक ग्रेड में वर्ष","Field of expertise":"विशेषज्ञता क्षेत्र","Not provided":"उपलब्ध नहीं","Not given yet":"अभी नहीं दिए",
+ "Eligible for transfer this cycle.":"इस चक्र में स्थानांतरण हेतु पात्र।","Not suggested for any seat this cycle.":"इस चक्र में किसी पद हेतु सुझाव नहीं।","Seat":"पद","Currently suggested":"वर्तमान सुझाव","Basis / why not":"आधार / कारण","This executive":"यही अधिकारी","Vacant":"रिक्त","No":"नहीं",
+ "By subsidiary":"अनुषंगीवार","Executives in":"आने वाले अधिकारी","Executives out":"जाने वाले अधिकारी","Net":"शुद्ध","Out":"बाहर","In":"अंदर",
+ "How a posting is suggested":"पदस्थापना कैसे सुझाई जाती है","Filter":"छँटाई","Score":"अंक","Promote":"पदोन्नति","Eligibility for transfer":"स्थानांतरण पात्रता","Weights in the fit score":"उपयुक्तता अंक में भार","Sensitive posts":"संवेदनशील पद","Restore defaults":"मूल नियम लौटाएँ",
+ "Cycle date":"चक्र तिथि","Min. years at current posting":"वर्तमान पदस्थापना पर न्यूनतम वर्ष","Superannuation age":"सेवानिवृत्ति आयु","Skip if retiring within (yrs)":"इतने वर्षों में सेवानिवृत्ति हो तो छोड़ें","Minimum fit score to suggest":"सुझाव हेतु न्यूनतम उपयुक्तता अंक","Related-field credit (%)":"संबंधित क्षेत्र का श्रेय (%)",
+ "Same discipline / cadre only":"केवल समान संवर्ग","Inter-subsidiary transfers only":"केवल अंतर-अनुषंगी स्थानांतरण","Respect recorded exemptions (spouse posting, medical ground, etc.)":"दर्ज छूट का पालन करें (पति/पत्नी पदस्थापना, चिकित्सा आधार आदि)",
+ "Expertise match":"विशेषज्ञता मिलान","Years in that field":"उस क्षेत्र में वर्ष","Seasoning in grade":"ग्रेड में अनुभव","Total service":"कुल सेवा","Tenure at current posting":"वर्तमान पदस्थापना पर कार्यकाल","Stated preference":"बताई गई पसंद",
+ "Flag after (years in post)":"इतने वर्ष बाद चिह्नित करें","Place flagged executives first when matching":"मिलान में चिह्नित अधिकारियों को पहले रखें","Words that mark a department as sensitive":"विभाग को संवेदनशील बताने वाले शब्द","Min. years in present grade":"वर्तमान ग्रेड में न्यूनतम वर्ष","Fill vacancies left after transfers by promotion":"स्थानांतरण के बाद बची रिक्तियाँ पदोन्नति से भरें",
+ "Only CIL HQ can change these rules. You can see how postings are worked out.":"केवल सीआईएल मुख्यालय ये नियम बदल सकता है। आप देख सकते हैं कि पदस्थापना कैसे तय होती है।",
+ "Update status":"अद्यतन स्थिति","Executives":"अधिकारी","Requirement lines":"आवश्यकता पंक्तियाँ","Last updated":"अंतिम अद्यतन","Not updated this cycle":"इस चक्र में अद्यतन नहीं","Employee data":"कर्मचारी डेटा","Requirements":"आवश्यकताएँ","Choose file":"फ़ाइल चुनें","Copy template":"टेम्पलेट कॉपी करें","Export":"निर्यात",
+ "Add employee":"कर्मचारी जोड़ें","Add vacancy":"रिक्ति जोड़ें","Reload sample data":"नमूना डेटा पुनः लोड करें","Clear decisions & overrides":"निर्णय व बदलाव हटाएँ","Edit":"संपादित करें","Read-only":"केवल देखें","Save":"सहेजें","Cancel":"रद्द करें","Close":"बंद करें",
+ "Copy for Excel":"एक्सेल हेतु कॉपी करें","Copy as CSV":"सीएसवी रूप में कॉपी करें","Download .csv":".csv डाउनलोड करें","Saved":"सहेजा गया","Employees":"कर्मचारी","Name":"नाम","Unit":"इकाई","Rank":"क्रम","Total":"कुल","Cadre":"संवर्ग"
+};
+const HI_RX=[
+ [/^Good (morning|afternoon|evening), (.+)$/,(m,a,b)=>({morning:"सुप्रभात",afternoon:"नमस्कार",evening:"शुभ संध्या"})[a]+", "+b],
+ [/^You update (.+)'s employees and vacancies\. CIL HQ reviews and approves postings\.$/,"आप $1 के कर्मचारी व रिक्तियाँ अद्यतन करते हैं। सीआईएल मुख्यालय पदस्थापनाओं की समीक्षा व अनुमोदन करता है।"],
+ [/^(\d+) of (\d+) updated this cycle$/,"इस चक्र में $2 में से $1 ने अद्यतन किया"],[/^(\d+) of (\d+) seats matched$/,"$2 में से $1 पदों का मिलान"],[/^(\d+) decisions recorded$/,"$1 निर्णय दर्ज"],[/^Step (\d)$/,"चरण $1"],[/^(\d+) items?$/,"$1 कार्य"],
+ [/^Sensitive posts held over ([\d.]+) years, no move found$/,"$1 वर्ष से अधिक संवेदनशील पद, स्थानांतरण नहीं मिला"],[/^Update (.+)'s employee data$/,"$1 का कर्मचारी डेटा अद्यतन करें"],[/^Vacancy lines entered for (.+)$/,"$1 हेतु दर्ज रिक्ति पंक्तियाँ"],[/^No vacancies entered for (.+)$/,"$1 हेतु कोई रिक्ति दर्ज नहीं"],[/^(.+) executives proposed to move out$/,"$1 से बाहर जाने हेतु प्रस्तावित अधिकारी"],
+ [/^Seats and moves for (.+)$/,"$1 के पद व स्थानांतरण"],[/^(.+) at a glance$/,"$1 एक नज़र में"],[/^Vacancies in (.+)$/,"$1 में रिक्तियाँ"],[/^Average fit (\d+) \/ 100$/,"औसत उपयुक्तता $1 / 100"],[/^Min (\d+(?:\.\d+)?) yrs in lower grade$/,"निचले ग्रेड में न्यूनतम $1 वर्ष"],
+ [/^Sensitive > ([\d.]+) yrs$/,"संवेदनशील > $1 वर्ष"],[/^(\d+) given a move$/,"$1 का स्थानांतरण"],[/^of (\d+) suggested$/,"$1 सुझावों में से"],[/^Approved (\d+)$/,"स्वीकृत $1"],[/^On hold (\d+)$/,"रोके गए $1"],[/^Rejected (\d+)$/,"अस्वीकृत $1"],[/^Pending (\d+)$/,"लंबित $1"],
+ [/^Sensitive posts over ([\d.]+) years$/,"$1 वर्ष से अधिक संवेदनशील पद"],[/^Sensitive post held more than ([\d.]+) years$/,"$1 वर्ष से अधिक समय से संवेदनशील पद"],[/^Showing (.+)$/,"दिखाया जा रहा है: $1"],
+ [/^([\d.]+) yrs? in (E\d+)$/,"$2 में $1 वर्ष"],[/^([\d.]+) yrs? at (.+)$/,"$2 में $1 वर्ष"],[/^([\d.]+) yrs? in (E\d+) \(min ([\d.]+)\)$/,"$2 में $1 वर्ष (न्यूनतम $3)"],[/^(.+) ([\d.]+) yrs? \(needs ([\d.]+)\)$/,"$1 $2 वर्ष (आवश्यक $3)"],
+ [/^Related: (.+) ([\d.]+) yrs?$/,"संबंधित: $1 $2 वर्ष"],[/^No (.+) experience$/,"$1 का अनुभव नहीं"],[/^Promotion (E\d+) → (E\d+)$/,"पदोन्नति $1 → $2"],[/^Choice (\d): (.+)$/,"विकल्प $1: $2"],[/^Prefers (.+)$/,"पसंद: $1"],[/^Sensitive post ([\d.]+) yrs?$/,"संवेदनशील पद $1 वर्ष"],
+ [/^([\d.]+) yrs?$/,"$1 वर्ष"],[/^([\d.]+) yrs? service$/,"$1 वर्ष सेवा"],[/^Already in (.+)$/,"पहले से $1 में"],[/^Exempt: (.+)$/,"छूट: $1"],[/^Only ([\d.]+) yrs at current posting \(min ([\d.]+)\)$/,"वर्तमान पदस्थापना पर केवल $1 वर्ष (न्यूनतम $2)"],[/^Retires within ([\d.]+) yrs \(age ([\d.]+)\)$/,"$1 वर्ष में सेवानिवृत्ति (आयु $2)"],
+ [/^Signed in as (.+)$/,"$1 के रूप में साइन इन"],[/^Sensitive & ?gt; ([\d.]+) yrs$/,"संवेदनशील > $1 वर्ष"],[/^Sensitive > ([\d.]+) yrs$/,"संवेदनशील > $1 वर्ष"]
+];
+function t(s){if(LANG!=="hi")return s;const k=String(s);if(HI[k])return HI[k];for(const [rx,r] of HI_RX){if(rx.test(k))return k.replace(rx,r)}return s}
+const ORIG=new WeakMap();
+function trNode(root){
+  if(LANG!=="hi"||!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(w.nextNode())nodes.push(w.currentNode);
+  nodes.forEach(n=>{const p=n.parentElement;if(!p||p.closest("script,style,textarea,[data-notr]"))return;const raw=n.nodeValue,tr=raw.trim();if(!tr)return;const x=t(tr);if(x!==tr){if(!ORIG.has(n))ORIG.set(n,raw);n.nodeValue=raw.replace(tr,x)}});
+  const els=root.querySelectorAll?[root,...root.querySelectorAll("[placeholder],[aria-label],[title]")]:[];
+  els.forEach(el=>{if(!el.getAttribute||el.closest("[data-notr]"))return;["placeholder","aria-label","title"].forEach(a=>{const v=el.getAttribute(a);if(!v)return;const x=t(v);if(x!==v){if(!el.hasAttribute("data-o-"+a))el.setAttribute("data-o-"+a,v);el.setAttribute(a,x)}})});
+}
+function restoreDOM(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);while(w.nextNode()){const n=w.currentNode;if(ORIG.has(n)){n.nodeValue=ORIG.get(n);ORIG.delete(n)}}
+  ["placeholder","aria-label","title"].forEach(a=>document.querySelectorAll("[data-o-"+a+"]").forEach(el=>{el.setAttribute(a,el.getAttribute("data-o-"+a));el.removeAttribute("data-o-"+a)}))}
+new MutationObserver(ms=>{if(LANG!=="hi")return;ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)trNode(n);else if(n.nodeType===3&&n.parentElement)trNode(n.parentElement)}))}).observe(document.body,{childList:true,subtree:true});
+function setLang(l){LANG=l==="hi"?"hi":"en";try{localStorage.setItem("ctm-lang",LANG)}catch(e){}document.documentElement.lang=LANG;if(LANG==="en")restoreDOM();renderAll();if(LANG==="hi")trNode(document.body)}
+function renderLangControls(){document.querySelectorAll(".lang-lbl").forEach(el=>el.textContent=LANG==="hi"?"English":"हिंदी")}
+
+/* ----- Executive: home ----- */
+function renderExecHome(){
+  const e=C.empById.get(execId()); if(!e){$("#main").innerHTML="";return}
+  const R=C.R, bl=C.eb.get(e.id), s=C.seatOf[e.id], d=s&&decOf(s.id), ch=S.choices[e.id], hr=new Date().getHours();
+  const greet=hr<12?L("Good morning","सुप्रभात"):hr<17?L("Good afternoon","नमस्कार"):L("Good evening","शुभ संध्या");
+  const card=(tone,lab,big,sub,tab)=>`<div class="stat-card ${tone}"><div class="label">${lab}</div><div class="big">${big}</div><div class="muted" style="font-size:.85rem">${sub}</div>${tab?`<a class="btn small" style="align-self:flex-start;margin-top:4px" href="#${tab}" data-act="nav" data-tab="${tab}">${L("Open","खोलें")}</a>`:""}</div>`;
+  const approved=d&&!d.stale&&d.v==="Approve";
+  $("#main").innerHTML=`<section class="panel">
+   <div class="hello"><div><h1>${greet}, ${h(e.Name)}</h1><p>${h(e.grade)} · ${h(e.disc)} · ${subTag(e.sub)} ${h(e.Unit)} · <span class="mono">${h(e.id)}</span></p></div></div>
+   ${e.flag?`<div class="banner bad">${L(`You have held a sensitive post (${h(e.sensDesc)}) for ${fmtY(e.sensYears)}. Rotation is due this cycle.`,`आप ${fmtY(e.sensYears).replace("yrs","वर्ष").replace("yr","वर्ष")} से संवेदनशील पद (${h(e.sensDesc)}) पर हैं। इस चक्र में रोटेशन देय है।`)}</div>`:""}
+   <div class="stat-cards">
+    ${bl.length?card("warn",L("Transfer this cycle","इस चक्र में स्थानांतरण"),L("Not due","देय नहीं"),h(bl[0])):card("good",L("Transfer this cycle","इस चक्र में स्थानांतरण"),L("Due for transfer","स्थानांतरण देय"),L(`${fmtY(e.tenure)} at present posting`,`वर्तमान पदस्थापना पर ${e.tenure.toFixed(1)} वर्ष`))}
+    ${ch&&ch.list.length?card("good",L("Posting choices","पदस्थापना विकल्प"),ch.list.map(c=>h(c.sub)).join(" · "),L("Given on ","दिए गए: ")+h(ch.at),"choices"):card("bad",L("Posting choices","पदस्थापना विकल्प"),L("Not given","नहीं दिए"),L("Give up to three choices","अधिकतम तीन विकल्प दें"),"choices")}
+    ${card("info",L("Seniority","वरिष्ठता"),`#${e.senRank} ${L("of","में से")} ${e.senOf}`,L(`in ${h(e.grade)} ${h(e.disc)}, all CIL`,`${h(e.grade)} ${h(e.disc)} में, पूरे सीआईएल में`),"seniority")}
+    ${e.yGrade>=R.promoYears?card("good",L("Promotion","पदोन्नति"),L("Eligible","पात्र"),L(`${fmtY(e.yGrade)} in ${h(e.grade)}; against a vacancy only`,`${h(e.grade)} में ${e.yGrade.toFixed(1)} वर्ष; केवल रिक्ति होने पर`)):card("info",L("Promotion","पदोन्नति"),L("Not yet eligible","अभी पात्र नहीं"),L(`${fmtY(e.yGrade)} in ${h(e.grade)}, needs ${R.promoYears}`,`${h(e.grade)} में ${e.yGrade.toFixed(1)} वर्ष, आवश्यक ${R.promoYears}`))}
+   </div>
+   <div class="grid2">
+    <div class="card"><h2>${L("Result of this cycle","इस चक्र का परिणाम")}</h2>
+     ${approved?`<div class="banner good">${L("Your new posting has been approved by CIL HQ.","सीआईएल मुख्यालय ने आपकी नई पदस्थापना स्वीकृत कर दी है।")}</div><dl class="kv"><dt>${L("Posting","पदस्थापना")}</dt><dd>${subTag(s.sub)} ${h(s.unit)}</dd><dt>${L("Department","विभाग")}</dt><dd>${h(s.dept)}</dd><dt>${L("Grade","ग्रेड")}</dt><dd>${h(s.grade)}${s.grade!==e.grade?" · "+L("Promotion","पदोन्नति"):""}</dd><dt>${L("Approved on","स्वीकृति तिथि")}</dt><dd>${h(d.at||"")}</dd></dl>`
+      :`<p class="muted">${L("Your result will appear here after CIL HQ approves this cycle's postings.","सीआईएल मुख्यालय द्वारा इस चक्र की पदस्थापनाएँ स्वीकृत होने के बाद आपका परिणाम यहाँ दिखेगा।")}</p>`}</div>
+    <div class="card"><h2>${L("My record","मेरा विवरण")}</h2>
+     <dl class="kv"><dt>${L("Department","विभाग")}</dt><dd>${h(e.Department||"—")}</dd><dt>${L("Total service","कुल सेवा")}</dt><dd class="num">${fmtY(e.service)}</dd><dt>${L("In current grade","वर्तमान ग्रेड में")}</dt><dd class="num">${fmtY(e.yGrade)}</dd><dt>${L("At current posting","वर्तमान पदस्थापना पर")}</dt><dd class="num">${fmtY(e.tenure)}</dd><dt>${L("Sensitive post","संवेदनशील पद")}</dt><dd>${e.sens?`${h(e.sensDesc)} · ${fmtY(e.sensYears)}`:L("No","नहीं")}</dd></dl>
+     <div><div class="label">${L("Field of expertise","विशेषज्ञता क्षेत्र")}</div><div class="chips" style="margin-top:4px">${e.exp.map(x=>`<span class="chip good">${h(x.field)} · ${fmtY(x.years)}</span>`).join("")}</div></div>
+     <p class="muted" style="font-size:.82rem">${L("If anything here is wrong, ask your subsidiary HQ to correct it in the HRMS data.","यदि कोई विवरण गलत है, तो अपनी अनुषंगी कंपनी मुख्यालय से एचआरएमएस डेटा में सुधार करवाएँ।")}</p></div>
+   </div></section>`;
+}
+
+/* ----- Executive: posting choices ----- */
+let CH_DRAFT=null;
+function renderChoices(){
+  const e=C.empById.get(execId()); if(!e){$("#main").innerHTML="";return}
+  const saved=S.choices[e.id];
+  if(!CH_DRAFT){CH_DRAFT=[0,1,2].map(i=>({sub:(saved&&saved.list[i]&&saved.list[i].sub)||"",unit:(saved&&saved.list[i]&&saved.list[i].unit)||""}))}
+  const subs=SUB_ORDER.filter(s=>!(C.R.interOnly&&s===e.sub));
+  const rows=CH_DRAFT.map((c,i)=>`<div class="choice-row"><span class="no">${i+1}</span>
+    <select id="ch_sub_${i}" data-ch="${i}" data-k="sub" aria-label="${L("Choice","विकल्प")} ${i+1}: ${L("subsidiary","अनुषंगी कंपनी")}" data-notr><option value="">${L("Choose subsidiary","अनुषंगी कंपनी चुनें")}</option>${subs.map(s=>`<option value="${h(s)}"${c.sub===s?" selected":""}>${h(s)} · ${h(SUBS[s].name)}</option>`).join("")}</select>
+    <select id="ch_unit_${i}" data-ch="${i}" data-k="unit" aria-label="${L("Choice","विकल्प")} ${i+1}: ${L("area / unit","क्षेत्र / इकाई")}" data-notr${c.sub?"":" disabled"}><option value="">${L("Any area / unit","कोई भी क्षेत्र / इकाई")}</option>${c.sub?SUBS[c.sub].units.map(u=>`<option value="${h(u)}"${c.unit===u?" selected":""}>${h(u)}</option>`).join(""):""}</select></div>`).join("");
+  const R=C.R, promoOK=e.yGrade>=R.promoYears;
+  const match=C.seats.filter(s=>s.sub!==e.sub&&(!R.sameDiscipline||key(s.disc)===key(e.disc))&&(s.grade===e.grade||(promoOK&&gnum(s.grade)===gnum(e.grade)+1)))
+    .map(s=>({s,r:evalPair(e,s,R,C.eb.get(e.id))})).sort((a,b)=>b.r.score-a.r.score).slice(0,8);
+  $("#main").innerHTML=`<section class="panel">
+   <div class="note"><b>${L("How your choices are used.","आपके विकल्पों का उपयोग कैसे होता है।")}</b> ${L("Give up to three subsidiaries in order of preference. Your first choice counts most, then the second and third. Choices are considered along with your expertise and the vacancies; they are not a guarantee.","वरीयता क्रम में अधिकतम तीन अनुषंगी कंपनियाँ चुनें। पहला विकल्प सबसे अधिक महत्व रखता है, फिर दूसरा और तीसरा। विकल्पों पर आपकी विशेषज्ञता और रिक्तियों के साथ विचार होता है; ये गारंटी नहीं हैं।")}</div>
+   ${C.eb.get(e.id).length?`<div class="banner info">${L("You are not due for transfer this cycle","आप इस चक्र में स्थानांतरण हेतु देय नहीं हैं")} (${h(C.eb.get(e.id)[0])}). ${L("Your choices will be kept for the next cycle.","आपके विकल्प अगले चक्र हेतु रखे जाएँगे।")}</div>`:""}
+   <div class="grid2">
+    <div class="card"><div class="card-h"><h2>${L("My three choices","मेरे तीन विकल्प")}</h2>${saved?`<span class="pill p-Approve">${L("Submitted","जमा किए गए")} · ${h(saved.at)}</span>`:`<span class="pill p-Reject">${L("Not submitted","जमा नहीं")}</span>`}</div>
+     <div style="display:flex;flex-direction:column;gap:10px">${rows}</div>
+     <div class="err" id="chErr"></div>
+     <div class="toolbar"><button class="btn primary" data-act="saveChoices">${saved?L("Update my choices","विकल्प अद्यतन करें"):L("Submit my choices","विकल्प जमा करें")}</button>${saved?`<button class="btn danger" data-act="withdrawChoices">${L("Withdraw","वापस लें")}</button>`:""}</div></div>
+    <div class="card"><h2>${L("Open seats that match your profile","आपकी प्रोफ़ाइल से मेल खाते रिक्त पद")}</h2>
+     <p class="muted" style="font-size:.85rem">${L(`Vacancies in ${e.grade}${promoOK?` and E${gnum(e.grade)+1}`:""} for ${e.disc} in other subsidiaries, best fit first.`,`अन्य अनुषंगी कंपनियों में ${e.disc} हेतु ${e.grade}${promoOK?` व E${gnum(e.grade)+1}`:""} की रिक्तियाँ, सबसे उपयुक्त पहले।`)}</p>
+     ${match.length?`<div class="frame" style="border:0"><table><tbody>${match.map(({s,r})=>`<tr><td>${subTag(s.sub)} ${h(s.unit)}<div class="muted" style="font-size:.82rem">${h(s.field)} · ${h(s.grade)}${s.grade!==e.grade?" · "+L("promotion","पदोन्नति"):""}</div></td><td style="width:110px">${scoreCell(r.score)}</td><td style="width:1%"><button class="btn small" data-act="useSeat" data-sub="${h(s.sub)}" data-unit="${h(s.unit)}">${L("Add","जोड़ें")}</button></td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">${L("No open seat matches your grade and cadre right now. You can still choose any subsidiary.","अभी आपके ग्रेड व संवर्ग से मेल खाता कोई पद रिक्त नहीं है। आप फिर भी कोई भी अनुषंगी कंपनी चुन सकते हैं।")}</p>`}</div>
+   </div></section>`;
+}
+function saveChoices(){
+  const e=C.empById.get(execId()); const list=CH_DRAFT.filter(c=>c.sub).map(c=>({sub:c.sub,unit:c.unit||""}));
+  if(!list.length){$("#chErr").textContent=L("Choose at least one subsidiary.","कम से कम एक अनुषंगी कंपनी चुनें।");return}
+  const seen=new Set();for(const c of list){const k=c.sub+"|"+c.unit;if(seen.has(k)){$("#chErr").textContent=L("The same choice appears twice. Pick different places.","एक ही विकल्प दो बार है। अलग स्थान चुनें।");return}seen.add(k)}
+  S.choices[e.id]={list,at:new Date().toISOString().slice(0,10)};CH_DRAFT=null;renderAll();toast(L("Your choices are saved","आपके विकल्प सहेजे गए"));
+}
+
+/* ----- Seniority list ----- */
+let SEN={grade:"",disc:"",sub:""};
+function senDate(e){return e.GradeSince&&parseDate(e.GradeSince)?new Date(parseDate(e.GradeSince)).toISOString().slice(0,10):new Date(C.cyc-e.yGrade*365.25*864e5).toISOString().slice(0,10)}
+function renderSeniority(){
+  const me=isExec()?C.empById.get(execId()):null;
+  const grades=sortGrades(uniq(C.emps.map(e=>e.grade))), discs=uniq(C.emps.map(e=>e.disc)).sort();
+  if(me){SEN.grade=me.grade;SEN.disc=me.disc;SEN.sub=""}
+  if(!grades.includes(SEN.grade))SEN.grade=grades.includes("E4")?"E4":grades[0]||"";
+  if(!discs.includes(SEN.disc))SEN.disc=discs.includes("Personnel")?"Personnel":discs[0]||"";
+  const R=C.R;
+  const list=C.emps.filter(e=>e.grade===SEN.grade&&e.disc===SEN.disc).sort((a,b)=>a.senRank-b.senRank).filter(e=>!SEN.sub||e.sub===SEN.sub);
+  const subs=sortSubs(uniq(C.emps.map(e=>e.sub)));
+  $("#main").innerHTML=`<section class="panel">
+   <div class="note"><b>${L("How seniority is ranked.","वरिष्ठता कैसे तय होती है।")}</b> ${L("Within each grade and cadre across all of CIL: whoever entered the grade earlier ranks higher. If equal, the earlier date of joining ranks higher, then the older executive.","पूरे सीआईएल में प्रत्येक ग्रेड व संवर्ग के भीतर: जिसने ग्रेड में पहले प्रवेश किया वह ऊपर। बराबर होने पर पहले कार्यग्रहण तिथि वाला, फिर अधिक आयु वाला अधिकारी ऊपर।")} ${L(`Promotion needs ${R.promoYears} years in grade and a vacancy.`,`पदोन्नति हेतु ग्रेड में ${R.promoYears} वर्ष और रिक्ति आवश्यक।`)}</div>
+   <div class="toolbar">
+     <div class="field"><label class="label" for="senGrade">${L("Grade","ग्रेड")}</label><select id="senGrade"${me?" disabled":""}>${grades.map(g=>`<option${g===SEN.grade?" selected":""}>${h(g)}</option>`).join("")}</select></div>
+     <div class="field"><label class="label" for="senDisc">${L("Cadre","संवर्ग")}</label><select id="senDisc"${me?" disabled":""} data-notr>${discs.map(g=>`<option${g===SEN.disc?" selected":""}>${h(g)}</option>`).join("")}</select></div>
+     ${me?"":`<div class="field"><label class="label" for="senSub">${L("Subsidiary","अनुषंगी कंपनी")}</label><select id="senSub">${opts(subs,SEN.sub,L("All CIL","पूरा सीआईएल"))}</select></div>`}
+     <span class="grow"></span>${me?"":`<button class="btn small" data-act="senExport">${L("Export list","सूची निर्यात करें")}</button>`}
+   </div>
+   <p class="muted" style="margin:0;font-size:.85rem">${L(`${list.length} executives in ${SEN.grade} ${SEN.disc}${SEN.sub?" posted in "+SEN.sub+" (rank shown is CIL-wide)":""}.`,`${SEN.grade} ${SEN.disc} में ${list.length} अधिकारी${SEN.sub?", "+SEN.sub+" में पदस्थ (क्रम पूरे सीआईएल का)":""}।`)}</p>
+   <div class="frame"><table style="min-width:860px"><thead><tr><th>${L("Rank","क्रम")}</th><th>${L("Executive","अधिकारी")}</th><th>${L("Posting","पदस्थापना")}</th><th>${L("In grade since","ग्रेड में तिथि से")}</th><th>${L("Years in grade","ग्रेड में वर्ष")}</th><th>${L("Date of joining","कार्यग्रहण तिथि")}</th><th>${L("Promotion","पदोन्नति")}</th><th>${L("Notes","टिप्पणी")}</th></tr></thead><tbody>
+    ${list.map(e=>`<tr class="${me&&e.id===me.id?"me-row":""}"><td class="num"><b>${e.senRank}</b></td><td><b>${h(e.Name)}</b>${me&&e.id===me.id?` <span class="pill p-Approve">${L("You","आप")}</span>`:""}<div class="mono muted" style="font-size:.8rem">${h(e.id)}</div></td><td>${subTag(e.sub)} ${h(e.Unit)}</td><td class="num">${senDate(e)}</td><td class="num">${e.yGrade.toFixed(1)}</td><td class="num">${h(e.DateOfJoining||"—")}</td>
+      <td>${e.yGrade>=R.promoYears?`<span class="chip good">${L("Eligible","पात्र")}</span>`:`<span class="chip">${L("Not yet","अभी नहीं")}</span>`}</td>
+      <td><div class="chips">${e.age!=null&&e.age>=R.retireAge-R.retireBuffer?`<span class="chip warn">${L("Retiring soon","शीघ्र सेवानिवृत्ति")}</span>`:""}${e.flag?`<span class="chip bad">${L("Sensitive post","संवेदनशील पद")} ${e.sensYears.toFixed(1)}</span>`:""}${C.seatOf[e.id]&&C.seatOf[e.id].grade!==e.grade&&!me?`<span class="chip man">${L("Suggested for promotion","पदोन्नति हेतु सुझाव")}</span>`:""}</div></td></tr>`).join("")||`<tr><td colspan="8" class="muted">${L("No executives in this grade and cadre.","इस ग्रेड व संवर्ग में कोई अधिकारी नहीं।")}</td></tr>`}
+   </tbody></table></div></section>`;
+}
+
+/* ----- Department-wise employees ----- */
+let DEPT={sub:"",open:"",q:""};
+function renderDepts(){
+  const R=C.R, sub=isCIL()?DEPT.sub:S.role, q=DEPT.q.toLowerCase();
+  const emps=C.emps.filter(e=>!sub||e.sub===sub);
+  const grades=sortGrades(uniq(C.emps.map(e=>e.grade)));
+  const by=new Map();emps.forEach(e=>{const d=e.Department||L("Not stated","उल्लेख नहीं");if(!by.has(d))by.set(d,[]);by.get(d).push(e)});
+  const depts=[...by.entries()].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0]));
+  const seatsBy=d=>C.seats.filter(s=>(!sub||s.sub===sub)&&s.dept===d).length;
+  const match=e=>!q||[e.Name,e.id,e.Unit,e.grade,e.disc,...e.exp.map(x=>x.field)].join(" ").toLowerCase().includes(q);
+  const cols=grades.length+6;
+  const body=depts.map(([d,list])=>{const shown=list.filter(match);if(q&&!shown.length)return "";const open=q||DEPT.open===d;
+    const row=`<tr class="clickable${open?" dept-open":""}" data-act="deptOpen" data-d="${h(d)}"><td><b>${open?"▾":"▸"} ${h(d)}</b></td>${grades.map(g=>{const n=list.filter(e=>e.grade===g).length;return `<td class="num">${n||'<span class="muted">·</span>'}</td>`}).join("")}<td class="num"><b>${list.length}</b></td><td class="num"${list.some(e=>e.flag)?" style='color:var(--bad);font-weight:600'":""}>${list.filter(e=>e.flag).length}</td><td class="num">${list.filter(e=>e.choiceList).length}</td><td class="num">${seatsBy(d)}</td><td class="num">${(list.reduce((a,e)=>a+e.service,0)/list.length).toFixed(1)}</td></tr>`;
+    if(!open)return row;
+    const det=shown.sort((a,b)=>gnum(b.grade)-gnum(a.grade)||a.senRank-b.senRank).map(e=>`<tr><td><b>${h(e.Name)}</b><div class="mono muted" style="font-size:.8rem">${h(e.id)}</div></td><td>${h(e.grade)}</td><td>${h(e.disc)}</td><td>${sub?"":subTag(e.sub)+" "}${h(e.Unit)}</td><td class="num">${e.yGrade.toFixed(1)}</td><td class="num">#${e.senRank}/${e.senOf}</td><td><div class="chips">${e.exp.slice(0,3).map(x=>`<span class="chip">${h(x.field)} ${x.years}</span>`).join("")}</div></td><td>${e.sens?`<span class="chip ${e.flag?"bad":""}">${e.sensYears.toFixed(1)} ${L("yrs","वर्ष")}</span>`:`<span class="muted">—</span>`}</td><td>${e.choiceList?e.choiceList.map(c=>h(c.sub)).join(", "):`<span class="muted">—</span>`}</td></tr>`).join("");
+    return row+`<tr class="dept-open"><td colspan="${cols}" style="padding:0 0 8px 0"><div class="frame" style="margin:0 12px;border-radius:8px"><table style="min-width:900px"><thead><tr><th>${L("Executive","अधिकारी")}</th><th>${L("Grade","ग्रेड")}</th><th>${L("Cadre","संवर्ग")}</th><th>${L("Unit","इकाई")}</th><th>${L("Yrs in grade","ग्रेड में वर्ष")}</th><th>${L("Seniority","वरिष्ठता")}</th><th>${L("Expertise (yrs)","विशेषज्ञता (वर्ष)")}</th><th>${L("Sensitive post","संवेदनशील पद")}</th><th>${L("Choices","विकल्प")}</th></tr></thead><tbody>${det}</tbody></table></div></td></tr>`}).join("");
+  const tot=g=>emps.filter(e=>e.grade===g).length;
+  $("#main").innerHTML=`<section class="panel">
+   <div class="toolbar">${isCIL()?`<div class="field"><label class="label" for="deptSub">${L("Subsidiary","अनुषंगी कंपनी")}</label><select id="deptSub">${opts(sortSubs(uniq(C.emps.map(e=>e.sub))),DEPT.sub,L("All CIL","पूरा सीआईएल"))}</select></div>`:`<span class="tag">${L("Showing","दिखाया जा रहा है")} <b>${h(S.role)}</b></span>`}
+     <div class="field grow"><label class="label" for="deptQ">${L("Find an executive","अधिकारी खोजें")}</label><input type="search" id="deptQ" value="${h(DEPT.q)}" placeholder="${L("Name, EIS no., unit or expertise","नाम, ईआईएस संख्या, इकाई या विशेषज्ञता")}" data-notr></div>
+     <button class="btn small" data-act="deptExport" style="align-self:flex-end">${L("Export","निर्यात")}</button></div>
+   <p class="muted" style="margin:0;font-size:.85rem">${L(`${emps.length} executives in ${depts.length} departments${sub?" of "+sub:" across CIL"}. Click a department to see its executives.`,`${sub?sub+" के ":"पूरे सीआईएल के "}${depts.length} विभागों में ${emps.length} अधिकारी। विभाग पर क्लिक करके अधिकारी देखें।`)}</p>
+   <div class="frame"><table style="min-width:${360+grades.length*56}px"><thead><tr><th>${L("Department","विभाग")}</th>${grades.map(g=>`<th>${h(g)}</th>`).join("")}<th>${L("Total","कुल")}</th><th>${L(`Sensitive > ${R.sensitiveYears} yrs`,`संवेदनशील > ${R.sensitiveYears} वर्ष`)}</th><th>${L("Choices given","विकल्प दिए")}</th><th>${L("Open seats","रिक्त पद")}</th><th>${L("Avg service","औसत सेवा")}</th></tr></thead>
+    <tbody>${body||`<tr><td colspan="${cols}" class="muted">${L("No executives match.","कोई अधिकारी मेल नहीं खाता।")}</td></tr>`}
+    <tr><td class="label">${L("Total","कुल")}</td>${grades.map(g=>`<td class="num"><b>${tot(g)}</b></td>`).join("")}<td class="num"><b>${emps.length}</b></td><td class="num"><b>${emps.filter(e=>e.flag).length}</b></td><td class="num"><b>${emps.filter(e=>e.choiceList).length}</b></td><td class="num"><b>${C.seats.filter(s=>!sub||s.sub===sub).length}</b></td><td></td></tr></tbody></table></div>
+  </section>`;
+}
+
+/* ---------------- Help chatbot ---------------- */
+let BOT={open:false,msgs:[]};
+const PAGE_WORDS={home:["home","होम","मुख्य पृष्ठ"],dashboard:["dashboard","chart","डैशबोर्ड","चार्ट"],suggestions:["posting suggestion","suggestions","postings","पदस्थापना सुझाव","सुझाव"],rotation:["sensitive","promotion","संवेदनशील","पदोन्नति"],employee:["employee view","profile","प्रोफ़ाइल","कर्मचारी विवरण"],flow:["transfer flow","flow","प्रवाह"],departments:["department","विभाग"],seniority:["seniority","वरिष्ठता"],data:["data","upload","डेटा","अपलोड"],rules:["rule","policy","नियम","नीति"],choices:["choice","preference","option","विकल्प","पसंद"]};
+function findPage(q){for(const p of visiblePages()){if((PAGE_WORDS[p.id]||[]).some(w=>q.includes(w)))return p}return null}
+function findPerson(q){
+  const m=q.match(/\b\d{6,}\b/);if(m){const e=C.empById.get(m[0]);if(e)return e}
+  if(isExec())return null;
+  return C.emps.find(e=>e.Name.length>5&&q.includes(e.Name.toLowerCase()))||null;
+}
+function subIn(q){const hit=SUB_ORDER.find(s=>new RegExp("(^|[^a-z])"+s.toLowerCase().replace(" ","\\s*")+"([^a-z]|$)").test(q));if(hit)return hit;const n=Object.entries(SUBS).find(([k,v])=>q.includes(v.name.toLowerCase().split(" ")[0]));return n?n[0]:null}
+function botGreet(){return {html:L("Namaste! I am <b>Sahayak</b>, the help assistant. Ask me how to use this site, about the transfer rules, or to open a page. You can type in English or Hindi.","नमस्ते! मैं <b>सहायक</b> हूँ। इस साइट के उपयोग, स्थानांतरण नियमों या कोई पृष्ठ खोलने के बारे में पूछें। आप हिंदी या अंग्रेज़ी में लिख सकते हैं।")}}
+function botChips(){
+  const lang=LANG==="hi"?"English":"हिंदी में";
+  if(!S.role)return [L("How do I sign in?","साइन इन कैसे करें?"),L("What does this tool do?","यह टूल क्या करता है?"),lang];
+  if(isExec())return [L("How do I give my choices?","विकल्प कैसे दें?"),L("My status","मेरी स्थिति"),L("My seniority","मेरी वरिष्ठता"),L("Sensitive post rule","संवेदनशील पद नियम"),L("Promotion rule","पदोन्नति नियम"),lang];
+  if(isCIL())return [L("Pending decisions","लंबित निर्णय"),L("Vacancies in MCL","एमसीएल में रिक्तियाँ"),L("How are postings matched?","मिलान कैसे होता है?"),L("Open dashboard","डैशबोर्ड खोलें"),L("Seniority rule","वरिष्ठता नियम"),lang];
+  return [L("How do I upload data?","डेटा कैसे अपलोड करें?"),L(`Vacancies in ${S.role}`,`${S.role} में रिक्तियाँ`),L("Who has not given choices?","किसने विकल्प नहीं दिए?"),L("Sensitive post rule","संवेदनशील पद नियम"),L("Open departments","विभाग खोलें"),lang];
+}
+function botReply(raw){
+  const q=raw.toLowerCase().trim(), has=(...w)=>w.some(x=>q.includes(x)), R=S.rules;
+  const ul=a=>"<ul>"+a.map(x=>`<li>${x}</li>`).join("")+"</ul>";
+  if(has("हिंदी","हिन्दी","hindi"))return {html:"ठीक है। अब पूरी साइट हिंदी में है।",lang:"hi"};
+  if(has("english","अंग्रेज़ी","अंग्रेजी","इंग्लिश"))return {html:"Done. The site is now in English.",lang:"en"};
+  if(has("dark mode","डार्क"))return {html:L("Dark mode is on.","डार्क मोड चालू है।"),theme:"dark"};
+  if(has("light mode","लाइट"))return {html:L("Light mode is on.","लाइट मोड चालू है।"),theme:"light"};
+  if(!S.role){
+    if(has("what","tool","क्या","टूल","about"))return {html:L("This tool suggests postings for CIL's November transfer cycle. It matches each executive's field of expertise and years of experience to the vacancies reported by each subsidiary, rotates long-held sensitive posts and fills the rest by promotion. CIL HQ reviews and approves every posting.","यह टूल सीआईएल के नवंबर स्थानांतरण चक्र हेतु पदस्थापना सुझाता है। यह प्रत्येक अधिकारी की विशेषज्ञता व अनुभव को अनुषंगी कंपनियों की रिक्तियों से मिलाता है, लंबे समय से संवेदनशील पदों पर रहे अधिकारियों का रोटेशन करता है और शेष पद पदोन्नति से भरता है। सीआईएल मुख्यालय हर पदस्थापना की समीक्षा व अनुमोदन करता है।")};
+    return {html:L("There are two ways to sign in:","साइन इन के दो तरीके हैं:")+ul([L("<b>Executives</b>: type your EIS / employee number under <i>Executive login</i> and press Continue.","<b>अधिकारी</b>: <i>अधिकारी लॉगिन</i> में अपनी ईआईएस / कर्मचारी संख्या लिखें और आगे बढ़ें दबाएँ।"),L("<b>Offices</b>: click your office's login ID, for example <span class='mono'>mcl.hq</span> or <span class='mono'>cil.hq</span>.","<b>कार्यालय</b>: अपने कार्यालय की लॉगिन आईडी पर क्लिक करें, जैसे <span class='mono'>mcl.hq</span> या <span class='mono'>cil.hq</span>।")])+L("This is a demo, so there is no password.","यह डेमो है, इसलिए पासवर्ड नहीं है।")};
+  }
+  if(has("open ","go to","show me","take me","खोल","दिखा","जाएँ","ले चलो")){
+    const pg=findPage(q);if(pg)return {html:L(`Opening <b>${h(pg.title)}</b>.`,`<b>${h(t(pg.title))}</b> खोल रहा हूँ।`),go:pg.id};
+    if(PAGES.concat(EXEC_PAGES).some(x=>(PAGE_WORDS[x.id]||[]).some(w=>q.includes(w))))return {html:L("That page is only available to office logins.","वह पृष्ठ केवल कार्यालय लॉगिन हेतु उपलब्ध है।")};
+  }
+  const p=findPerson(q);
+  if(p){
+    if(isExec()&&p.id!==execId())return {html:L("You can only see your own record.","आप केवल अपना विवरण देख सकते हैं।")};
+    const s=C.seatOf[p.id], canSee=isCIL()||p.sub===S.role||(s&&s.sub===S.role)||p.id===execId();
+    const d=s&&decOf(s.id);
+    let html=`<b>${h(p.Name)}</b> <span class="mono">${h(p.id)}</span><br>${h(p.grade)} · ${h(p.disc)} · ${h(p.sub)} ${h(p.Unit)}<br>${L("Department","विभाग")}: ${h(p.Department||"—")}<br>${L("Seniority","वरिष्ठता")}: #${p.senRank} / ${p.senOf}<br>${L("At present posting","वर्तमान पदस्थापना पर")}: ${p.tenure.toFixed(1)} ${L("yrs","वर्ष")}${p.flag?`<br>${L("Sensitive post","संवेदनशील पद")}: ${p.sensYears.toFixed(1)} ${L("yrs","वर्ष")}`:""}`;
+    if(canSee&&!isExec())html+=`<br>${L("Suggested","सुझाव")}: ${s?`${h(s.sub)} ${h(s.unit)} (${h(s.id)})${d&&!d.stale?" · "+h(t(d.v)):""}`:L("none this cycle","इस चक्र में नहीं")}`;
+    return {html,acts:myEmp(p)&&!isExec()?[{label:L("Open profile","प्रोफ़ाइल खोलें"),act:"botEmp",v:p.id}]:[]};
+  }
+  if(isExec()&&has("status","my transfer","my posting","result","स्थिति","परिणाम","मेरा स्थानांतरण")){
+    const e=C.empById.get(execId()),bl=C.eb.get(e.id),s=C.seatOf[e.id],d=s&&decOf(s.id),ch=S.choices[e.id];
+    return {html:ul([bl.length?L("Not due for transfer this cycle: ","इस चक्र में स्थानांतरण देय नहीं: ")+h(bl[0]):L("You are due for transfer this cycle.","इस चक्र में आपका स्थानांतरण देय है।"),
+      ch?L("Your choices: ","आपके विकल्प: ")+ch.list.map(c=>h(c.sub)).join(", "):L("You have not given your choices yet.","आपने अभी विकल्प नहीं दिए हैं।"),
+      d&&!d.stale&&d.v==="Approve"?L("Approved posting: ","स्वीकृत पदस्थापना: ")+h(s.sub+" "+s.unit):L("Your result will show after CIL HQ approval.","परिणाम सीआईएल मुख्यालय की स्वीकृति के बाद दिखेगा।")]),acts:[{label:L("Open my home","मेरा होम खोलें"),act:"nav",tab:"home"}]};
+  }
+  if(has("seniority","वरिष्ठता")){
+    const rule=L("Seniority is ranked within each grade and cadre across CIL: earlier entry into the grade ranks higher; if equal, earlier date of joining, then the older executive.","वरिष्ठता पूरे सीआईएल में प्रत्येक ग्रेड व संवर्ग के भीतर तय होती है: ग्रेड में पहले प्रवेश वाला ऊपर; बराबर होने पर पहले कार्यग्रहण वाला, फिर अधिक आयु वाला।");
+    if(isExec()&&!has("rule","how","नियम","कैसे")){const e=C.empById.get(execId());return {html:L(`You are <b>#${e.senRank} of ${e.senOf}</b> in ${h(e.grade)} ${h(e.disc)} across CIL.`,`पूरे सीआईएल में ${h(e.grade)} ${h(e.disc)} में आप <b>${e.senOf} में से #${e.senRank}</b> हैं।`)+"<br>"+rule,acts:[{label:L("Open seniority list","वरिष्ठता सूची खोलें"),act:"nav",tab:"seniority"}]}}
+    return {html:rule,acts:[{label:L("Open seniority list","वरिष्ठता सूची खोलें"),act:"nav",tab:"seniority"}]};
+  }
+  if(has("choice","preference","option","विकल्प","पसंद")){
+    if(isExec())return {html:L("To give your posting choices:","पदस्थापना विकल्प देने हेतु:")+ul([L("Open <b>My posting choices</b> in the menu.","मेनू में <b>मेरे पदस्थापना विकल्प</b> खोलें।"),L("Pick up to three subsidiaries in order of preference, and an area if you like.","वरीयता क्रम में अधिकतम तीन अनुषंगी कंपनियाँ और चाहें तो क्षेत्र चुनें।"),L("Or press <b>Add</b> next to a matching open seat.","या मेल खाते रिक्त पद के आगे <b>जोड़ें</b> दबाएँ।"),L("Press <b>Submit my choices</b>. You can change them until CIL HQ decides.","<b>विकल्प जमा करें</b> दबाएँ। सीआईएल मुख्यालय के निर्णय तक आप इन्हें बदल सकते हैं।")]),acts:[{label:L("Open my choices","मेरे विकल्प खोलें"),act:"nav",tab:"choices"}]};
+    const scope=C.emps.filter(e=>myEmp(e)&&!C.eb.get(e.id).length), no=scope.filter(e=>!e.choiceList);
+    return {html:L(`${scope.length-no.length} of ${scope.length} eligible executives have given choices.`,`${scope.length} पात्र अधिकारियों में से ${scope.length-no.length} ने विकल्प दिए हैं।`)+(no.length?"<br>"+L("Not yet: ","अभी नहीं: ")+no.slice(0,8).map(e=>h(e.Name)).join(", ")+(no.length>8?" …":""):""),acts:[{label:L("Open departments","विभाग खोलें"),act:"nav",tab:"departments"}]};
+  }
+  if(has("sensitive","संवेदनशील"))return {html:L(`Executives handling vendor bill payments, tendering, stores, cash, coal sales or allotments for more than <b>${R.sensitiveYears} years</b> are flagged and placed first when vacancies are matched. If no matching vacancy exists, the subsidiary should move them to a non-sensitive desk.`,`विक्रेता बिल भुगतान, निविदा, भंडार, नकद, कोयला विक्रय या आवंटन का कार्य <b>${R.sensitiveYears} वर्ष</b> से अधिक करने वाले अधिकारी चिह्नित होते हैं और मिलान में पहले रखे जाते हैं। मेल खाता पद न हो तो अनुषंगी कंपनी उन्हें गैर-संवेदनशील कार्य पर लगाए।`),acts:isExec()?[]:[{label:L("Open list","सूची खोलें"),act:"nav",tab:"rotation"}]};
+  if(has("promotion","promot","पदोन्नति"))return {html:L(`An executive becomes eligible for the next grade after <b>${R.promoYears} years</b> in the present grade, and only against a vacancy. Vacancies left after transfers are offered to eligible executives, best fit first.`,`वर्तमान ग्रेड में <b>${R.promoYears} वर्ष</b> के बाद अधिकारी अगले ग्रेड हेतु पात्र होता है, और केवल रिक्ति होने पर। स्थानांतरण के बाद बची रिक्तियाँ पात्र अधिकारियों को, सबसे उपयुक्त को पहले, दी जाती हैं।`)};
+  if(has("match","how are posting","how is posting","मिलान","कैसे तय"))return {html:L("Postings are suggested in four steps:","पदस्थापना चार चरणों में सुझाई जाती है:")+ul([L("Filter: same grade and cadre; skip short tenure, near retirement and exemptions.","छँटाई: समान ग्रेड व संवर्ग; कम कार्यकाल, निकट सेवानिवृत्ति व छूट वालों को छोड़ें।"),L("Score: field of expertise and years in it matter most, then grade seasoning, tenure and choices.","अंक: विशेषज्ञता क्षेत्र व उसमें वर्ष सबसे महत्वपूर्ण, फिर ग्रेड अनुभव, कार्यकाल व विकल्प।"),L("Transfer: the best overall fit across all seats; sensitive-post holders first.","स्थानांतरण: सभी पदों में सर्वोत्तम कुल मिलान; संवेदनशील पद वाले पहले।"),L("Promote: seats still vacant go to eligible executives one grade below.","पदोन्नति: बचे रिक्त पद एक ग्रेड नीचे के पात्र अधिकारियों को।")]),acts:[{label:L("Open rules","नियम खोलें"),act:"nav",tab:"rules"}]};
+  if(has("eligib","tenure","पात्र","कार्यकाल"))return {html:L(`You can be transferred after <b>${R.minTenure} years</b> at the present posting. No transfer within ${R.retireBuffer} years of retirement at ${R.retireAge}. Recorded exemptions such as spouse posting or medical ground are respected.`,`वर्तमान पदस्थापना पर <b>${R.minTenure} वर्ष</b> के बाद स्थानांतरण हो सकता है। ${R.retireAge} वर्ष की सेवानिवृत्ति से ${R.retireBuffer} वर्ष पहले स्थानांतरण नहीं। पति/पत्नी पदस्थापना या चिकित्सा आधार जैसी दर्ज छूट का पालन होता है।`)};
+  if(!isExec()&&has("upload","template","csv","excel","अपलोड","टेम्पलेट"))return {html:L("To update your data:","डेटा अद्यतन हेतु:")+ul([L("Open <b>Data</b> in the menu.","मेनू में <b>डेटा</b> खोलें।"),L("Press <b>Copy template</b> to see the columns, fill them in Excel and save as CSV.","कॉलम देखने हेतु <b>टेम्पलेट कॉपी करें</b> दबाएँ, एक्सेल में भरें और सीएसवी में सहेजें।"),L("Press <b>Choose file</b> or drop the file on the box. Only your own subsidiary's rows are taken.","<b>फ़ाइल चुनें</b> दबाएँ या फ़ाइल बॉक्स पर छोड़ें। केवल आपकी अनुषंगी कंपनी की पंक्तियाँ ली जाती हैं।"),L("Or use <b>Add employee</b> / <b>Edit</b> to change single rows.","या एक-एक पंक्ति हेतु <b>कर्मचारी जोड़ें</b> / <b>संपादित करें</b> उपयोग करें।")]),acts:[{label:L("Open Data","डेटा खोलें"),act:"nav",tab:"data"}]};
+  if(!isExec()&&has("pending","decision","approve","लंबित","निर्णय","स्वीकृ")){const st=stats();return {html:L(`Decisions: ${st.dec.Approve} approved, ${st.dec.Hold} on hold, ${st.dec.Reject} rejected, <b>${st.dec.Pending} pending</b>.`,`निर्णय: ${st.dec.Approve} स्वीकृत, ${st.dec.Hold} रोके, ${st.dec.Reject} अस्वीकृत, <b>${st.dec.Pending} लंबित</b>।`)+(isCIL()?"":"<br>"+L("CIL HQ makes these decisions.","ये निर्णय सीआईएल मुख्यालय लेता है।")),acts:[{label:L("Review pending","लंबित देखें"),act:"go",tab:"suggestions",v:"pending"}]}}
+  if(!isExec()&&has("vacanc","vacant","seat","रिक्ति","रिक्त")){const sub=subIn(q),seats=C.seats.filter(s=>!sub||s.sub===sub),f=seats.filter(s=>C.final[s.id]),pr=f.filter(s=>kindOf(s,C.empById.get(C.final[s.id]))==="Promotion").length;
+    return {html:L(`${sub||"All CIL"}: <b>${seats.length} seats</b>. ${f.length-pr} suggested by transfer, ${pr} by promotion, ${seats.length-f.length} still vacant.`,`${sub||"पूरा सीआईएल"}: <b>${seats.length} पद</b>। ${f.length-pr} स्थानांतरण से, ${pr} पदोन्नति से सुझाए गए, ${seats.length-f.length} अभी भी रिक्त।`),acts:[{label:L("Open postings","पदस्थापनाएँ खोलें"),act:"nav",tab:"suggestions"}]}}
+  if(!isExec()&&has("how many","employees in","executives in","कितने","कर्मचारी")){const sub=subIn(q)||(isCIL()?null:S.role),list=C.emps.filter(e=>!sub||e.sub===sub);
+    return {html:L(`${sub||"All CIL"}: <b>${list.length} executives</b> in ${uniq(list.map(e=>e.Department)).length} departments. ${list.filter(e=>e.flag).length} have held a sensitive post for over ${R.sensitiveYears} years.`,`${sub||"पूरा सीआईएल"}: ${uniq(list.map(e=>e.Department)).length} विभागों में <b>${list.length} अधिकारी</b>। ${list.filter(e=>e.flag).length} अधिकारी ${R.sensitiveYears} वर्ष से अधिक समय से संवेदनशील पद पर हैं।`),acts:[{label:L("Open departments","विभाग खोलें"),act:"nav",tab:"departments"}]}}
+  if(has("login","log in","sign","password","logout","log out","switch","लॉगिन","पासवर्ड","लॉग आउट","साइन"))return {html:L("To change login, press the exit button next to your name at the bottom of the menu. Executives sign in with their EIS number; offices pick their login ID. This demo has no passwords.","लॉगिन बदलने हेतु मेनू के नीचे अपने नाम के आगे निकास बटन दबाएँ। अधिकारी ईआईएस संख्या से, कार्यालय अपनी लॉगिन आईडी से साइन इन करते हैं। इस डेमो में पासवर्ड नहीं है।")};
+  const pg=findPage(q);
+  if(pg)return {html:L(`Opening <b>${h(pg.title)}</b>.`,`<b>${h(t(pg.title))}</b> खोल रहा हूँ।`),go:pg.id};
+  if(/(^|\s)(hi|hello|namaste|help)(\s|$|[!?.])/.test(q)||has("नमस्ते","मदद","सहायता"))return botGreet();
+  return {html:L("Sorry, I did not understand. Try one of the suggestions below, or ask about choices, seniority, sensitive posts, promotion, vacancies, or an executive's name or EIS number.","क्षमा करें, मैं समझ नहीं पाया। नीचे दिए सुझावों में से कोई चुनें, या विकल्प, वरिष्ठता, संवेदनशील पद, पदोन्नति, रिक्तियों, या किसी अधिकारी के नाम या ईआईएस संख्या के बारे में पूछें।")};
+}
+function botAsk(text){
+  text=String(text||"").trim();if(!text)return;
+  BOT.msgs.push({who:"user",html:h(text)});
+  let r;try{r=botReply(text)}catch(err){r={html:L("Something went wrong: ","कुछ गलत हुआ: ")+h(err.message)}}
+  BOT.msgs.push({who:"bot",html:r.html,acts:r.acts||[]});
+  if(BOT.msgs.length>60)BOT.msgs=BOT.msgs.slice(-60);
+  if(r.lang){setLang(r.lang);return}
+  if(r.theme)setTheme(r.theme);
+  if(r.go&&S.role)go(r.go);
+  renderBot();
+}
+function renderBot(){
+  const el=$("#bot");if(!el)return;
+  if(!BOT.open){el.innerHTML=`<button class="bot-fab" data-act="botOpen" aria-label="${L("Open help assistant","सहायक खोलें")}" data-notr>${icon("chat")}<span>${L("Help","सहायता")}</span></button>`;return}
+  if(!BOT.msgs.length)BOT.msgs.push({who:"bot",...botGreet()});
+  el.innerHTML=`<div class="bot-panel" role="dialog" aria-label="${L("Help assistant","सहायक")}" data-notr>
+    <div class="bot-head"><div class="av">${icon("chat")}</div><div><b>${L("Sahayak · help assistant","सहायक · सहायता")}</b><span>${L("Answers from this tool's rules and data","इस टूल के नियमों व डेटा से उत्तर")}</span></div><button data-act="botClose" aria-label="${L("Close","बंद करें")}">×</button></div>
+    <div class="bot-msgs" id="botMsgs" aria-live="polite">${BOT.msgs.map(m=>`<div class="msg ${m.who}">${m.html}${m.acts&&m.acts.length?`<div class="acts">${m.acts.map(a=>`<button data-act="${a.act==="nav"?"botNav":a.act==="go"?"botGo":a.act}" data-tab="${h(a.tab||"")}" data-v="${h(a.v||"")}">${h(a.label)}</button>`).join("")}</div>`:""}</div>`).join("")}</div>
+    <div class="bot-chips">${botChips().map(c=>`<button data-act="botAsk" data-q="${h(c)}">${h(c)}</button>`).join("")}</div>
+    <form class="bot-form" id="botForm"><input type="text" id="botIn" autocomplete="off" placeholder="${L("Type your question…","अपना प्रश्न लिखें…")}" aria-label="${L("Your question","आपका प्रश्न")}"><button class="btn primary" type="submit" aria-label="${L("Send","भेजें")}">${icon("send")}</button></form></div>`;
+  const m=$("#botMsgs");if(m)m.scrollTop=m.scrollHeight;const i=$("#botIn");if(i&&window.innerWidth>700)i.focus();
+}
+
 /* ---------------- Events ---------------- */
 document.addEventListener("click",ev=>{
   const a=ev.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
+  if(act==="botOpen"){BOT.open=true;renderBot();return}
+  if(act==="botClose"){BOT.open=false;renderBot();const f=$(".bot-fab");if(f)f.focus();return}
+  if(act==="botAsk"){botAsk(a.dataset.q);return}
+  if(act==="botNav"){if(S.role)go(a.dataset.tab);if(window.innerWidth<700){BOT.open=false;renderBot()}return}
+  if(act==="botGo"){if(S.role)go(a.dataset.tab,a.dataset.v||"");if(window.innerWidth<700){BOT.open=false;renderBot()}return}
+  if(act==="botEmp"){EMP_SEL=a.dataset.v;go("employee");return}
+  if(act==="toggleLang"){setLang(LANG==="hi"?"en":"hi");return}
+  if(act==="saveChoices"){saveChoices();return}
+  if(act==="withdrawChoices"){if(!a.dataset.armed){a.dataset.armed="1";a.textContent=L("Click again to withdraw","वापस लेने हेतु फिर क्लिक करें");return}delete S.choices[execId()];CH_DRAFT=null;renderAll();toast(L("Choices withdrawn","विकल्प वापस लिए गए"));return}
+  if(act==="useSeat"){if(!CH_DRAFT)return;const i=CH_DRAFT.findIndex(c=>!c.sub);if(CH_DRAFT.some(c=>c.sub===a.dataset.sub&&c.unit===a.dataset.unit)){toast(L("Already in your choices","पहले से आपके विकल्पों में"));return}if(i<0){toast(L("All three choices are filled. Clear one first.","तीनों विकल्प भरे हैं। पहले एक हटाएँ।"));return}CH_DRAFT[i]={sub:a.dataset.sub,unit:a.dataset.unit};renderChoices();toast(L(`Added as choice ${i+1}. Press Submit to save.`,`विकल्प ${i+1} के रूप में जोड़ा गया। सहेजने हेतु जमा करें दबाएँ।`));return}
+  if(act==="deptOpen"){DEPT.open=DEPT.open===a.dataset.d?"":a.dataset.d;renderDepts();return}
+  if(act==="deptExport"){const sub=isCIL()?DEPT.sub:S.role;const list=C.emps.filter(e=>!sub||e.sub===sub).sort((x,y)=>String(x.Department).localeCompare(String(y.Department))||gnum(y.grade)-gnum(x.grade)||x.senRank-y.senRank);
+    showExport("Department-wise employees",[["Department","EmpID","Name","Grade","Cadre","Subsidiary","Unit","Years in grade","Seniority rank","Sensitive post years","Posting choices"],...list.map(e=>[e.Department,e.id,e.Name,e.grade,e.disc,e.sub,e.Unit,e.yGrade.toFixed(1),e.senRank+"/"+e.senOf,e.sens?e.sensYears.toFixed(1):"",e.choiceList?e.choiceList.map(c=>c.sub+(c.unit?" ("+c.unit+")":"")).join("; "):""])],L("All executives, department by department, highest grade first.","सभी अधिकारी, विभागवार, उच्चतम ग्रेड पहले।"));return}
+  if(act==="senExport"){const list=C.emps.filter(e=>e.grade===SEN.grade&&e.disc===SEN.disc).sort((x,y)=>x.senRank-y.senRank).filter(e=>!SEN.sub||e.sub===SEN.sub);
+    showExport(`Seniority list ${SEN.grade} ${SEN.disc}`,[["Rank","EmpID","Name","Subsidiary","Unit","In grade since","Years in grade","Date of joining","Eligible for promotion"],...list.map(e=>[e.senRank,e.id,e.Name,e.sub,e.Unit,senDate(e),e.yGrade.toFixed(1),e.DateOfJoining||"",e.yGrade>=C.R.promoYears?"Yes":"No"])],L("CIL-wide seniority within the grade and cadre.","ग्रेड व संवर्ग के भीतर पूरे सीआईएल की वरिष्ठता।"));return}
   if(act==="nav"){ev.preventDefault();go(a.dataset.tab);return}
   if(act==="go"){ev.preventDefault();go(a.dataset.tab,a.dataset.status||"");return}
   if(act==="openNav"){document.body.classList.add("nav-open");const f=$("#nav a");if(f)f.focus();return}
@@ -1078,28 +1468,39 @@ document.addEventListener("click",ev=>{
   if(act==="clearDec"){if(!isCIL())return;S.overrides={};S.decisions={};renderAll();toast("Decisions and overrides cleared");return}
   if(act==="resetRules"){if(!isCIL())return;S.rules=structuredClone(DEFAULT_RULES);renderAll();return}
 });
-document.addEventListener("submit",ev=>{ev.preventDefault();if(ev.target.id==="edForm")saveRow()});
+document.addEventListener("submit",ev=>{ev.preventDefault();const f=ev.target;
+  if(f.id==="edForm")saveRow();
+  if(f.id==="botForm"){const i=$("#botIn");const v=i.value;i.value="";botAsk(v)}
+  if(f.id==="execForm"){const id=$("#execId").value.trim();const o=S.emps.find(x=>String(x.EmpID)===id);
+    if(!o){$("#execErr").textContent=L("No executive has this number. Check your EIS number, or ask your subsidiary HQ to add you.","इस संख्या का कोई अधिकारी नहीं है। अपनी ईआईएस संख्या जाँचें, या अपनी अनुषंगी कंपनी मुख्यालय से जुड़वाएँ।");return}
+    S.role="EMP:"+id;CH_DRAFT=null;SEN={grade:"",disc:"",sub:""};TAB="home";try{history.replaceState(null,"","#home")}catch(e){}renderAll();window.scrollTo(0,0);toast(L("Signed in as ","साइन इन: ")+o.Name)}
+});
 document.addEventListener("change",ev=>{
   const t=ev.target;
   if(t.classList.contains("ovr")){if(!isCIL())return;const s=t.dataset.seat,v=t.value;if((v==="__none"&&C.auto[s]===null)||v===C.auto[s])delete S.overrides[s];else S.overrides[s]=v;renderAll();return}
   if(t.id==="empPick"){EMP_SEL=t.value;renderEmp();return}
   if(t.id==="dashSub"){DASH_SUB=t.value;renderDash();return}
+  if(t.dataset.ch!==undefined&&CH_DRAFT){const i=+t.dataset.ch;CH_DRAFT[i][t.dataset.k]=t.value;if(t.dataset.k==="sub")CH_DRAFT[i].unit="";renderChoices();const n=document.getElementById(t.id);if(n)n.focus();return}
+  if(t.id==="senGrade"||t.id==="senDisc"||t.id==="senSub"){SEN[{senGrade:"grade",senDisc:"disc",senSub:"sub"}[t.id]]=t.value;renderSeniority();return}
+  if(t.id==="deptSub"){DEPT.sub=t.value;DEPT.open="";renderDepts();return}
   if(["fsub","fgrade","fdisc","fstatus"].includes(t.id)){F[{fsub:"sub",fgrade:"grade",fdisc:"disc",fstatus:"status"}[t.id]]=t.value;renderSugg();return}
   if(t.dataset.rule){if(!isCIL())return;const k=t.dataset.rule;S.rules[k]=t.type==="checkbox"?t.checked:t.type==="number"?(+t.value||0):t.value;renderAll();return}
   if(t.dataset.up&&t.files&&t.files[0]){const f=t.files[0],r=new FileReader();r.onload=()=>ingest(t.dataset.up,r.result,f.name);r.readAsText(f)}
 });
 let wT;document.addEventListener("input",ev=>{const t=ev.target;
+  if(t.id==="deptQ"){DEPT.q=t.value;clearTimeout(wT);wT=setTimeout(()=>{const pos=t.selectionStart;renderDepts();const n=$("#deptQ");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}},250);return}
   if(t.id==="fq"){F.q=t.value;clearTimeout(wT);wT=setTimeout(()=>{const pos=t.selectionStart;renderSugg();const n=$("#fq");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}},200);return}
   if(t.dataset.w&&isCIL()){S.rules.w[t.dataset.w]=+t.value;clearTimeout(wT);wT=setTimeout(()=>{const id=t.id;renderAll();const n=document.getElementById(id);if(n)n.focus()},120)}});
 document.addEventListener("dragover",ev=>{const d=ev.target.closest("[data-drop]");if(d){ev.preventDefault();d.classList.add("over")}});
 document.addEventListener("dragleave",ev=>{const d=ev.target.closest("[data-drop]");if(d)d.classList.remove("over")});
 document.addEventListener("drop",ev=>{const d=ev.target.closest("[data-drop]");if(!d)return;ev.preventDefault();d.classList.remove("over");const f=ev.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingest(d.dataset.drop,r.result,f.name);r.readAsText(f)});
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){$("#layer").innerHTML="";document.body.classList.remove("nav-open")}});
-window.addEventListener("hashchange",()=>{const hsh=(location.hash||"").slice(1);if(S&&S.role&&PAGES.some(p=>p.id===hsh)&&hsh!==TAB){TAB=hsh;renderShell();renderTab()}});
+window.addEventListener("hashchange",()=>{const hsh=(location.hash||"").slice(1);if(S&&S.role&&visiblePages().some(p=>p.id===hsh)&&hsh!==TAB){TAB=hsh;renderShell();renderTab()}});
 
 try{
   S=load();
-  const hsh=(location.hash||"").slice(1);if(PAGES.some(p=>p.id===hsh))TAB=hsh;
+  const hsh=(location.hash||"").slice(1);if(PAGES.concat(EXEC_PAGES).some(p=>p.id===hsh))TAB=hsh;
+  document.documentElement.lang=LANG;
   renderAll();
 }catch(err){document.body.insertAdjacentHTML("afterbegin",`<div class="banner bad" style="margin:16px">Something went wrong while loading the tool. Please pass this message on: ${String(err&&err.message||err).replace(/[<>&]/g,"")}</div>`)}
 </script>

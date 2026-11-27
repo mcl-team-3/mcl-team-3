@@ -93,6 +93,10 @@
   & promotion, Employees, Transfer flow, Data, Rules. Each is a section of
   index.html reached by #name in the address (e.g. #dashboard), so the
   3-page limit still holds. Light / Dark / Auto theme switch in the menu.
+  Office logins also get Departments and Seniority. Executives sign in with
+  their EmpID (EIS number) and see: My home, My posting choices, Seniority,
+  Transfer policy. English / हिंदी switch in the top bar. "Sahayak" help
+  chatbot button at bottom right on every page.
 
 ## Progress Log (newest entry at the bottom)
 - Phase 0 (starter): placeholder index.html, config.js without settings and
@@ -126,3 +130,16 @@
   expertise gaps), menu badges, Light/Dark/Auto theme. Matching logic not
   changed. Works in local tests; charts need the live site (Chart.js loads
   from jsDelivr). Known gaps: same as before (data stays in each browser).
+- 2026-11-27 (builder: Claude): added (1) executive login by EmpID with no
+  password (demo); executives give up to 3 posting choices (subsidiary +
+  optional area). Choice 1 counts 100%, 2 counts 75%, 3 counts 50% in the
+  "Stated preference" weight, replacing the PreferredSubsidiaries column.
+  (2) Seniority list per grade and cadre, CIL-wide: earlier entry into grade
+  first, then earlier joining, then older. (3) Departments page: department
+  x grade counts, click a department for its executives. (4) English/Hindi:
+  Hindi text comes from the HI dictionary and HI_RX patterns in index.html;
+  any English text not listed there stays English. (5) "Sahayak" chatbot:
+  rule-based (keyword matching), answers from the tool's own rules and data,
+  can open pages, switch language and theme. No AI service or API key.
+  Known gaps: data, choices and decisions still stay in each browser, so an
+  executive's choices only reach CIL HQ on the same computer.
